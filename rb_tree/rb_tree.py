@@ -14,6 +14,8 @@ class Node():
         self.color = 1
         self.contents = contents
 
+    def __repr__(self):
+        return 'Node at location {} with time {} and contents {}'.format(hex(id(self)), self.time, self.contents.__repr__())
 
 class RedBlackTree():
     def __init__(self):
@@ -203,7 +205,7 @@ class RedBlackTree():
                 indent += "|    "
 
             s_color = "RED" if node.color == 1 else "BLACK"
-            print(str(node.time) + "(" + s_color + ")")
+            print(str(node.time) + "(" + s_color + ")" + "(" + node.contents.__repr__() + ")")
             self.__print_helper(node.left, indent, False)
             self.__print_helper(node.right, indent, True)
 
@@ -221,7 +223,8 @@ class RedBlackTree():
 
     def searchFirstGEQ(self, key):
         # returns the node with the smallest time greater or equal to key
-        return self.search_first_GEQ_helper(self.root, key, self.root)
+        # if none exist, returns maximum time
+        return self.search_first_GEQ_helper(self.root, key, self.maximum(self.root))
 
     def search_first_GEQ_helper(self, node, key, candidate_node):
         # BEWARE OF GPT SLOP (seems to work tho)
@@ -353,22 +356,22 @@ class RedBlackTree():
 
 if __name__ == "__main__":
 
-    class Dummy():
-        def __init__(self, ex):
-            self.ex = ex
     bst = RedBlackTree()
 
-    bst.insert(55, Dummy('hello'))
-    bst.insert(40, Dummy(40))
-    bst.insert(65, Dummy('root?'))
-    bst.insert(60)
-    bst.insert(75)
-    bst.insert(57)
+    import numpy as np
+    for i in np.arange(0, 100, 5):
+        if i%20==0:
+            bst.insert(i, 'hi')
+        elif i%10==0:
+            bst.insert(i, 'hello')
+        else:
+            bst.insert(i, 'goodbye')
+
+
 
     bst.print_tree()
 
-    print("\nAfter deleting an element")
-    bst.delete_node(40)
-    bst.print_tree()
+    print(bst.searchFirstGEQ(10.0))
+    print(bst.searchFirstGEQ(1e6))
+    print(bst.searchFirstGEQ(-5))
 
-    print(bst.searchFirstGEQ(60.01).time)
