@@ -219,6 +219,30 @@ class RedBlackTree():
     def searchTree(self, k):
         return self.search_tree_helper(self.root, k)
 
+    def searchFirstGEQ(self, key):
+        # returns the node with the smallest time greater or equal to key
+        return self.search_first_GEQ_helper(self.root, key, self.root)
+
+    def search_first_GEQ_helper(self, node, key, candidate_node):
+        # BEWARE OF GPT SLOP (seems to work tho)
+        # recursion go brrrrr
+
+        if node == self.TNULL:
+            return candidate_node  # Return the best candidate when reaching a null node
+
+        # If we find a node with exactly the key time, return it
+        if key == node.time:
+            return node
+
+        # If the current node time is greater than the key, it could be a candidate
+        if node.time > key:
+            # Continue searching the left subtree, but track this node as a candidate
+            return self.search_first_GEQ_helper(node.left, key, node)
+
+        # Otherwise, continue searching the right subtree without updating the candidate
+        return self.search_first_GEQ_helper(node.right, key, candidate_node)
+
+
     def minimum(self, node):
         while node.left != self.TNULL:
             node = node.left
@@ -336,7 +360,7 @@ if __name__ == "__main__":
 
     bst.insert(55, Dummy('hello'))
     bst.insert(40, Dummy(40))
-    bst.insert(65)
+    bst.insert(65, Dummy('root?'))
     bst.insert(60)
     bst.insert(75)
     bst.insert(57)
@@ -347,5 +371,4 @@ if __name__ == "__main__":
     bst.delete_node(40)
     bst.print_tree()
 
-    # accessing node contents
-    print(bst.searchTree(55).contents)
+    print(bst.searchFirstGEQ(60.01).time)
