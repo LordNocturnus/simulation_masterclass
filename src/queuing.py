@@ -72,6 +72,17 @@ def breadQueue(customer, env, cheeseClerks):
         yield env.timeout(t_cheese)
         print('customer {} received cheese item(s) in {} seconds'.format(customer.ucid, t_cheese))
 
+# def entranceQueue(customer, env, shoppingCarts, baskets):
+#     if customer.basket:
+#
+#         print('customer {} enters queue at the cheese department {}'.format(customer.ucid))
+#         yield cheese_request  # wait to be served
+#         print(
+#             'customer {} is served at the cheese department {}'.format(customer.ucid)
+#         )
+
+
+
 
 if __name__ == "__main__":
 
