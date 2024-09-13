@@ -204,7 +204,7 @@ class RedBlackTree():
                 sys.stdout.write("L----")
                 indent += "|    "
 
-            s_color = "RED" if node.color == 1 else "BLACK"
+            s_color = "R" if node.color == 1 else "B"
             print(str(node.time) + "(" + s_color + ")" + "(" + node.contents.__repr__() + ")")
             self.__print_helper(node.left, indent, False)
             self.__print_helper(node.right, indent, True)
@@ -365,7 +365,9 @@ if __name__ == "__main__":
         elif i%10==0:
             bst.insert(i, 'hello')
         else:
-            bst.insert(i, 'goodbye')
+            bst.insert(i, 'buenos dias')
+
+    bst.insert(-100.314, 'goodbye')
 
 
 
@@ -374,4 +376,5 @@ if __name__ == "__main__":
     print(bst.searchFirstGEQ(10.0))
     print(bst.searchFirstGEQ(1e6))
     print(bst.searchFirstGEQ(-5))
+    print(bst.searchFirstGEQ(-1e6))
 
