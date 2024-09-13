@@ -11,3 +11,7 @@ class Customer:
         self.ucid = ucid
 
         print(f"{ucid} entered at {start_time}")
+
+    def total_items(self):
+        # total number of items in the shopping list
+        return sum([value for key, value in self.shopping_list.items()])
