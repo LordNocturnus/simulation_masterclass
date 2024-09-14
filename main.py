@@ -1,24 +1,27 @@
 import simpy
 from src.queuing import createResources
 from src.customer import Customer
+from src.customer_factory import CustomerFactory
 import numpy.random as rnd
+import pathlib
+import os
+from matplotlib import pyplot as plt
+
+# ensure correct cwd
+os.chdir(pathlib.Path(__file__).parent)
+
+plt.style.use("ggplot")
+
 
 # initialize env instance
-env = simpy.Environment(0.0)
+env = simpy.Environment()
+
 # initialize shared resoures
 resources = createResources(env)
 
-# add customer factory!
-# TODO:add customer factory
-
-# sample customers (replace before submitting!)
-customers = [
-        Customer(env, resources,
-                 {'a' : 1, 'b' : 2, 'c' : 3,'d' : 4, 'e' : 5, 'f' : 6, 'g' : 7},
-                 rnd.randint(0, 2, dtype=int), 'abcdefg',
-                 rnd.uniform(0, 12*60*60, 1), i) for i in range(1000)
-    ]
-
+print(pathlib.Path(os.getcwd()).joinpath("config.json"))
+customer_factory = CustomerFactory(env, pathlib.Path(os.getcwd()).joinpath("config.json"))
+customer_factory.run()
 
 env.run()
 

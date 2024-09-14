@@ -1,0 +1,59 @@
+from numpy import random as npr
+import numpy as np
+import json
+import sys
+
+
+from src.customer import Customer
+
+
+class CustomerFactory:
+
+    def __init__(self, env, customer_config, seed=0):
+        self.env = env
+        self.customers = []
+        self.rng = npr.default_rng(seed)
+
+        with open(customer_config) as config:
+            self.config = json.load(config)["Customer"]
+        self.config["search_bounds"] = tuple(self.config["search_bounds"])
+
+        self.departments = {}
+        for dep in self.config["items"].keys():
+            self.departments[dep] = {}
+            # create a triangular probability function for items
+            self.departments[dep]["items"] = np.arange(self.config["items"][dep][0], self.config["items"][dep][2] + 1, 1)
+            self.departments[dep]["probabilities"] = np.interp(self.departments[dep]["items"],
+                                                               [self.config["items"][dep][0] - 0.5,
+                                                                self.config["items"][dep][1],
+                                                                self.config["items"][dep][2] + 0.5],
+                                                               [0.0, 2 / (self.config["items"][dep][2] -
+                                                                          self.config["items"][dep][0] + 1), 0.0])
+            # correct for slight errors in interploation to ensure P(omega)=1
+            self.departments[dep]["probabilities"] /= np.sum(self.departments[dep]["probabilities"])
+
+        self.routes = []
+        self.route_probabilities = []
+        for route in self.config["route"].keys():
+            self.routes.append(route)
+            self.route_probabilities.append(self.config["route"][route])
+
+    def run(self):
+        ucid = 0
+        for k, v in enumerate(self.config["arrivals"][:-1]):
+            count = int(np.round(self.rng.normal(v[1], v[2] / 2)))
+            for _ in range(count):
+                self.customers.append(self.create_customer(k, ucid))
+                ucid +=1
+
+    def create_customer(self, hour, ucid) -> Customer:
+        t = self.rng.uniform(self.config["arrivals"][hour][0], self.config["arrivals"][hour + 1][0], 1)[0]
+        shopping_list = {}
+        for dep in self.departments.keys():
+            shopping_list[dep] = int(self.rng.choice(self.departments[dep]["items"],
+                                                     p=self.departments[dep]["probabilities"]))
+        basket = bool(self.rng.binomial(1, self.config["basket"], 10)[0])
+        route = self.rng.choice(self.routes, p=self.route_probabilities)
+        seed = self.rng.integers(0, sys.maxsize, 1)[0]
+
+        return Customer(self.env, shopping_list, basket, route, t, self.config["search_bounds"], ucid, seed)

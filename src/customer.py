@@ -1,15 +1,21 @@
 from src.queuing import checkoutProcess, breadQueue, cheeseQueue
 from src.department import function_dict, checkout_wrapper, generic_department_function
+import numpy.random as npr
+
 class Customer:
 
-    def __init__(self, env, resources: dict, shopping_list: dict[str, int], basket: bool, path: str, start_time: float, ucid: int):
+    def __init__(self, env, resources: dict, shopping_list: dict[str, int], basket: bool, route: str, start_time, search_bounds, ucid, seed):
         self.env = env
         self.resources = resources
         self.shopping_list = shopping_list
         self.basket = basket
-        self.path = path
+        self.route = route
         self.start_time = start_time
-        self.ucid = ucid
+        self.ucid = ucid # unique customer id
+        self.search_bounds = search_bounds
+        self.rng = npr.default_rng(seed)
+
+        self.action = self.env.process(self.run())
 
         self.env.process(self.run())
 
