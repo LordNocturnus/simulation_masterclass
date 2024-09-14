@@ -37,10 +37,10 @@ def checkoutProcess(customer, env, checkouts):
 
     # enter the shortest queue
     with checkouts[index].request() as checkout_request:
-        print('customer {} enters queue at checkout counter {}'.format(customer.ucid, index))
+        print('{} enters queue at checkout counter {}'.format(customer.ucid, index))
         yield checkout_request  # wait to be served
         print(
-            'customer {} is served at checkout counter {}'.format(customer.ucid, index)
+            '{} is served at checkout counter {}'.format(customer.ucid, index)
         )
 
         #scan each item
@@ -48,36 +48,36 @@ def checkoutProcess(customer, env, checkouts):
         for n_item in range(customer.total_items()):
             t_scan = rnd.normal(1.1, 1.1*0.1, 1)
             yield env.timeout(t_scan)
-            print('scanned item for customer {} in {} seconds'.format(customer.ucid, t_scan))
+            print('{} scans item in {} seconds'.format(customer.ucid, t_scan))
 
         # payment
         t_pay = rnd.uniform(40, 60, 1)
         yield env.timeout(t_pay)
-        print('customer {} paid in {} seconds'.format(customer.ucid, t_pay))
+        print('{} paid in {} seconds'.format(customer.ucid, t_pay))
 
 def breadQueue(customer, env, breadClerks):
     with breadClerks.request() as bread_request:
-        print('customer {} enters queue at the bread department'.format(customer.ucid))
+        print('{} enters queue at the bread department'.format(customer.ucid))
         yield bread_request  # wait to be served
         print(
-            'customer {} is served at the bread department'.format(customer.ucid)
+            '{} is served at the bread department'.format(customer.ucid)
         )
 
         t_bread = rnd.normal(120.0, 120.0*0.1, 1)
         yield env.timeout(t_bread)
-        print('customer {} received bread item(s) in {} seconds'.format(customer.ucid, t_bread))
+        print('{} received bread item(s) in {} seconds'.format(customer.ucid, t_bread))
 
 def cheeseQueue(customer, env, cheeseClerks):
     with cheeseClerks.request() as cheese_request:
-        print('customer {} enters queue at the cheese department'.format(customer.ucid))
+        print('{} enters queue at the cheese department'.format(customer.ucid))
         yield cheese_request  # wait to be served
         print(
-            'customer {} is served at the cheese department'.format(customer.ucid)
+            '{} is served at the cheese department'.format(customer.ucid)
         )
 
         t_cheese = rnd.normal(60.0, 60.0*0.1, 1)
         yield env.timeout(t_cheese)
-        print('customer {} received cheese item(s) in {} seconds'.format(customer.ucid, t_cheese))
+        print('{} received cheese item(s) in {} seconds'.format(customer.ucid, t_cheese))
 
 if __name__ == "__main__":
 

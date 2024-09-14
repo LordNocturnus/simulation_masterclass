@@ -1,5 +1,5 @@
 from src.queuing import checkoutProcess, breadQueue, cheeseQueue
-from src.department import function_dict, checkout_wrapper
+from src.department import function_dict, checkout_wrapper, generic_department_function
 class Customer:
 
     def __init__(self, env, resources: dict, shopping_list: dict[str, int], basket: bool, path: str, start_time: float, ucid: int):
@@ -11,6 +11,8 @@ class Customer:
         self.start_time = start_time
         self.ucid = ucid
 
+        self.env.process(self.run())
+
         # print(f"{ucid} entered at {start_time}")
 
     def total_items(self):
@@ -21,6 +23,7 @@ class Customer:
     def run(self):
         # wait to enter the store
         yield self.env.timeout(self.start_time)
+        print('{} enters the store at {}'.format(self.ucid, self.env.now))
 
         # choose basker or cart to pick at the entrance
         if self.basket:
@@ -31,16 +34,18 @@ class Customer:
         with container.request() as rq:
             # wait until a container is free
             yield rq
-            print('customer {} picks a basket'.format(self.ucid) if self.basket else 'customer {} picks a shopping cart'.format(self.ucid))
+            print('{} picks a basket'.format(self.ucid) if self.basket else '{} picks a shopping cart'.format(self.ucid))
 
             # loop over the departments on the intended path
             # (assuming self.path is a string of lowercase characters)!
             for current_department in self.path:
                 department_routine = function_dict[current_department]  # pick the right routine function
-                department_routine(self, self.env, current_department)  # execute routine at each department
+                routine = self.env.process(department_routine(self, self.env, current_department))
+                yield routine  # execute routine at each department
 
             # checkout
-            checkout_wrapper(self, self.env)
+            checkout = self.env.process(checkout_wrapper(self, self.env))
+            yield checkout
 
 
 

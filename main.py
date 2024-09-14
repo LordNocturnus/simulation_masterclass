@@ -16,11 +16,10 @@ customers = [
         Customer(env, resources,
                  {'a' : 1, 'b' : 2, 'c' : 3,'d' : 4, 'e' : 5, 'f' : 6, 'g' : 7},
                  rnd.randint(0, 2, dtype=int), 'abcdefg',
-                 rnd.uniform(0, 12*60*60, 1), i) for i in range(50)
+                 rnd.uniform(0, 12*60*60, 1), i) for i in range(1000)
     ]
 
-# add customer processes to env
-users = [env.process(customer.run()) for customer in customers]
+
 env.run()
 
 
