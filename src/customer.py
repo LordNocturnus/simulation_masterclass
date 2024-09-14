@@ -2,8 +2,7 @@ import numpy.random as npr
 
 class Customer:
 
-    def __init__(self, env, shopping_list: dict[str, int], basket: bool, route: str, start_time: float,
-                 search_bounds: (float, float), ucid: int, seed: int):
+    def __init__(self, env, shopping_list, basket, route, start_time, search_bounds, ucid, seed):
         self.env = env
         self.shopping_list = shopping_list
         self.basket = basket
@@ -13,4 +12,8 @@ class Customer:
         self.search_bounds = search_bounds
         self.rng = npr.default_rng(seed)
 
-        print(f"{ucid} entered at {start_time}")
+        self.action = self.env.process(self.run())
+
+    def run(self):
+        yield self.env.timeout(self.start_time)
+        print(f"{self.ucid} entered at {self.start_time}")
