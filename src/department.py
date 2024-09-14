@@ -8,9 +8,9 @@ def generic_department_function(customer, env, department_id):
     print('{} enters department {}'.format(customer.ucid, department_id))
 
     for item in range(customer.shopping_list[department_id]):
-        t_pick = rnd.uniform(20, 30, 1)
+        t_pick = float(rnd.uniform(20, 30, 1))
         yield env.timeout(t_pick)
-        print('{} picks an item at department {} in {} seconds'.format(customer.ucid, department_id, t_pick))
+        print('{} picks an item at department {} in {:.2f} seconds'.format(customer.ucid, department_id, t_pick))
 
     print('{} leaves department {}'.format(customer.ucid, department_id))
 
@@ -19,9 +19,9 @@ def department_cd_function(customer, env, department_id):
     print('{} enters department {}'.format(customer.ucid, department_id))
 
     match department_id:
-        case 'c':
+        case 'C':
             queue = env.process(breadQueue(customer, env, customer.resources['bread clerks']))
-        case 'd':
+        case 'D':
             queue = env.process(cheeseQueue(customer, env, customer.resources['cheese clerks']))
 
     yield queue
@@ -39,13 +39,13 @@ def checkout_wrapper(customer, env):
 
 # ugh
 function_dict = {
-    'a': generic_department_function,
-    'b': generic_department_function,
-    'c': department_cd_function,
-    'd': department_cd_function,
-    'e': generic_department_function,
-    'f': generic_department_function,
-    'g': generic_department_function
+    'A': generic_department_function,
+    'B': generic_department_function,
+    'C': department_cd_function,
+    'D': department_cd_function,
+    'E': generic_department_function,
+    'F': generic_department_function,
+    'G': generic_department_function
 }
 
 

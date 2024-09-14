@@ -17,10 +17,6 @@ class Customer:
 
         self.action = self.env.process(self.run())
 
-        self.env.process(self.run())
-
-        # print(f"{ucid} entered at {start_time}")
-
     def total_items(self):
         # total number of items in the shopping list
         return sum([value for key, value in self.shopping_list.items()])
@@ -44,7 +40,7 @@ class Customer:
 
             # loop over the departments on the intended path
             # (assuming self.path is a string of lowercase characters)!
-            for current_department in self.path:
+            for current_department in self.route:
                 department_routine = function_dict[current_department]  # pick the right routine function
                 routine = self.env.process(department_routine(self, self.env, current_department))
                 yield routine  # execute routine at each department

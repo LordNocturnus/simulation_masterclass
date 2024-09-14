@@ -46,14 +46,14 @@ def checkoutProcess(customer, env, checkouts):
         #scan each item
         # TODO:replace placeholders!!!
         for n_item in range(customer.total_items()):
-            t_scan = rnd.normal(1.1, 1.1*0.1, 1)
+            t_scan = float(rnd.normal(1.1, 1.1*0.1, 1))
             yield env.timeout(t_scan)
-            print('{} scans item in {} seconds'.format(customer.ucid, t_scan))
+            print('{} scans item in {:.2f} seconds'.format(customer.ucid, t_scan))
 
         # payment
-        t_pay = rnd.uniform(40, 60, 1)
+        t_pay = float(rnd.uniform(40, 60, 1))
         yield env.timeout(t_pay)
-        print('{} paid in {} seconds'.format(customer.ucid, t_pay))
+        print('{} paid in {:.2f} seconds'.format(customer.ucid, t_pay))
 
 def breadQueue(customer, env, breadClerks):
     with breadClerks.request() as bread_request:
@@ -63,9 +63,9 @@ def breadQueue(customer, env, breadClerks):
             '{} is served at the bread department'.format(customer.ucid)
         )
 
-        t_bread = rnd.normal(120.0, 120.0*0.1, 1)
+        t_bread = float(rnd.normal(120.0, 120.0*0.1, 1))
         yield env.timeout(t_bread)
-        print('{} received bread item(s) in {} seconds'.format(customer.ucid, t_bread))
+        print('{} received bread item(s) in {:.2f} seconds'.format(customer.ucid, t_bread))
 
 def cheeseQueue(customer, env, cheeseClerks):
     with cheeseClerks.request() as cheese_request:
@@ -75,9 +75,9 @@ def cheeseQueue(customer, env, cheeseClerks):
             '{} is served at the cheese department'.format(customer.ucid)
         )
 
-        t_cheese = rnd.normal(60.0, 60.0*0.1, 1)
+        t_cheese = float(rnd.normal(60.0, 60.0*0.1, 1))
         yield env.timeout(t_cheese)
-        print('{} received cheese item(s) in {} seconds'.format(customer.ucid, t_cheese))
+        print('{} received cheese item(s) in {:.2f} seconds'.format(customer.ucid, t_cheese))
 
 if __name__ == "__main__":
 

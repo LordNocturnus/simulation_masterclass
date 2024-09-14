@@ -9,10 +9,11 @@ from src.customer import Customer
 
 class CustomerFactory:
 
-    def __init__(self, env, customer_config, seed=0):
+    def __init__(self, env, customer_config, resources, seed=0):
         self.env = env
         self.customers = []
         self.rng = npr.default_rng(seed)
+        self.resources = resources
 
         with open(customer_config) as config:
             self.config = json.load(config)["Customer"]
@@ -56,4 +57,4 @@ class CustomerFactory:
         route = self.rng.choice(self.routes, p=self.route_probabilities)
         seed = self.rng.integers(0, sys.maxsize, 1)[0]
 
-        return Customer(self.env, shopping_list, basket, route, t, self.config["search_bounds"], ucid, seed)
+        return Customer(self.env, self.resources, shopping_list, basket, route, t, self.config["search_bounds"], ucid, seed)
