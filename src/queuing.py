@@ -16,7 +16,14 @@ def createResources(env):
         Resource(env, capacity=1) for _ in range(4)
     ]
 
-    return shoppingCarts, baskets, breadClerks, cheeseClerks, checkouts
+    # return shoppingCarts, baskets, breadClerks, cheeseClerks, checkouts
+    return {
+        "shopping carts" : shoppingCarts,
+        "baskets" : baskets,
+        "bread clerks" : breadClerks,
+        "cheese clerks" : cheeseClerks,
+        "checkouts" : checkouts
+    }
 
 def checkoutProcess(customer, env, checkouts):
 
@@ -41,7 +48,7 @@ def checkoutProcess(customer, env, checkouts):
         for n_item in range(customer.total_items()):
             t_scan = rnd.normal(1.1, 1.1*0.1, 1)
             yield env.timeout(t_scan)
-            print('scanned item {} for customer {} in {} seconds'.format(n_item, customer.ucid, t_scan))
+            print('scanned item for customer {} in {} seconds'.format(customer.ucid, t_scan))
 
         # payment
         t_pay = rnd.uniform(40, 60, 1)
@@ -50,39 +57,27 @@ def checkoutProcess(customer, env, checkouts):
 
 def breadQueue(customer, env, breadClerks):
     with breadClerks.request() as bread_request:
-        print('customer {} enters queue at the bread department {}'.format(customer.ucid))
+        print('customer {} enters queue at the bread department'.format(customer.ucid))
         yield bread_request  # wait to be served
         print(
-            'customer {} is served at the bread department {}'.format(customer.ucid)
+            'customer {} is served at the bread department'.format(customer.ucid)
         )
 
         t_bread = rnd.normal(120.0, 120.0*0.1, 1)
         yield env.timeout(t_bread)
         print('customer {} received bread item(s) in {} seconds'.format(customer.ucid, t_bread))
 
-def breadQueue(customer, env, cheeseClerks):
+def cheeseQueue(customer, env, cheeseClerks):
     with cheeseClerks.request() as cheese_request:
-        print('customer {} enters queue at the cheese department {}'.format(customer.ucid))
+        print('customer {} enters queue at the cheese department'.format(customer.ucid))
         yield cheese_request  # wait to be served
         print(
-            'customer {} is served at the cheese department {}'.format(customer.ucid)
+            'customer {} is served at the cheese department'.format(customer.ucid)
         )
 
         t_cheese = rnd.normal(60.0, 60.0*0.1, 1)
         yield env.timeout(t_cheese)
         print('customer {} received cheese item(s) in {} seconds'.format(customer.ucid, t_cheese))
-
-# def entranceQueue(customer, env, shoppingCarts, baskets):
-#     if customer.basket:
-#
-#         print('customer {} enters queue at the cheese department {}'.format(customer.ucid))
-#         yield cheese_request  # wait to be served
-#         print(
-#             'customer {} is served at the cheese department {}'.format(customer.ucid)
-#         )
-
-
-
 
 if __name__ == "__main__":
 
