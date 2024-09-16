@@ -34,57 +34,59 @@ def checkoutProcess(customer, env, checkouts):
     # enter the shortest queue
     with checkouts[index].request() as checkout_request:
         if customer.flags["print"]:
-            print('{} enters queue at checkout counter {}'.format(customer.ucid, index))
+            print('{:.2f}: {} enters queue at checkout counter {}'.format(env.now,customer.ucid, index))
         yield checkout_request  # wait to be served
         if customer.flags["print"]:
-            print('{} is served at checkout counter {}'.format(customer.ucid, index))
+            print('{:.2f}: {} is served at checkout counter {}'.format(env.now,customer.ucid, index))
 
+        t_tot_scan = 0.
         #scan each item
         for n_item in range(customer.total_items()):
             t_scan = float(customer.rng.normal(customer.stochastics["scan_vars"][0], customer.stochastics["scan_vars"][1], 1))
+            t_tot_scan += t_scan
             yield env.timeout(t_scan)
 
-            if customer.flags["print"]:
-                print('{} scans item in {:.2f} seconds'.format(customer.ucid, t_scan))
+        if customer.flags["print"]:
+            print('{:.2f}: {} scans {} items in {:.2f} seconds'.format(env.now,customer.ucid, customer.total_items(), t_tot_scan))
 
         # payment
         t_pay = float(customer.rng.uniform(customer.stochastics["payment_bounds"][0], customer.stochastics["payment_bounds"][1], 1))
         yield env.timeout(t_pay)
 
         if customer.flags["print"]:
-            print('{} paid in {:.2f} seconds'.format(customer.ucid, t_pay))
+            print('{:.2f}: {} paid in {:.2f} seconds'.format(env.now,customer.ucid, t_pay))
 
 def breadQueue(customer, env, breadClerks):
     with breadClerks.request() as bread_request:
 
         if customer.flags["print"]:
-            print('{} enters queue at the bread department'.format(customer.ucid))
+            print('{:.2f}: {} enters queue at the bread department'.format(env.now,customer.ucid))
         yield bread_request  # wait to be served
 
         if customer.flags["print"]:
-            print('{} is served at the bread department'.format(customer.ucid))
+            print('{:.2f}: {} is served at the bread department'.format(env.now,customer.ucid))
 
         t_bread = float(customer.rng.normal(customer.stochastics["bread_vars"][0], customer.stochastics["bread_vars"][1], 1))
         yield env.timeout(t_bread)
 
         if customer.flags["print"]:
-            print('{} received bread item(s) in {:.2f} seconds'.format(customer.ucid, t_bread))
+            print('{:.2f}: {} received bread item(s) in {:.2f} seconds'.format(env.now,customer.ucid, t_bread))
 
 def cheeseQueue(customer, env, cheeseClerks):
     with cheeseClerks.request() as cheese_request:
 
         if customer.flags["print"]:
-            print('{} enters queue at the cheese department'.format(customer.ucid))
+            print('{:.2f}: {} enters queue at the cheese department'.format(env.now,customer.ucid))
 
         yield cheese_request  # wait to be served
         if customer.flags["print"]:
-            print('{} is served at the cheese department'.format(customer.ucid))
+            print('{:.2f}: {} is served at the cheese department'.format(env.now,customer.ucid))
 
         t_cheese = float(customer.rng.normal(customer.stochastics["cheese_vars"][0], customer.stochastics["cheese_vars"][1], 1))
         yield env.timeout(t_cheese)
 
         if customer.flags["print"]:
-            print('{} received cheese item(s) in {:.2f} seconds'.format(customer.ucid, t_cheese))
+            print('{:.2f}: {} received cheese item(s) in {:.2f} seconds'.format(env.now,customer.ucid, t_cheese))
 
 if __name__ == "__main__":
 

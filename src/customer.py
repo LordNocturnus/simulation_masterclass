@@ -27,7 +27,7 @@ class Customer:
         # wait to enter the store
         yield self.env.timeout(self.start_time)
         if self.flags["print"]:
-            print('{} enters the store at {:.2f}'.format(self.ucid, self.env.now))
+            print('{:.2f}: {} enters the store'.format(self.env.now, self.ucid))
 
         # choose basker or cart to pick at the entrance
         if self.basket:
@@ -39,7 +39,8 @@ class Customer:
             # wait until a container is free
             yield rq
             if self.flags["print"]:
-                print('{} picks a basket'.format(self.ucid) if self.basket else '{} picks a shopping cart'.format(self.ucid))
+                print('{:.2f}: {} picks a basket'.format(self.env.now,self.ucid) if self.basket
+                      else '{:.2f}: {} picks a shopping cart'.format(self.env.now, self.ucid))
 
             # loop over the departments on the intended path
             # (assuming self.path is a string of lowercase characters)!
