@@ -4,7 +4,8 @@ import numpy.random as npr
 
 class Customer:
 
-    def __init__(self, env, stochastics:dict, resources: dict, flags:dict, shopping_list: dict[str, int], basket: bool, route: str, start_time, ucid, seed):
+    def __init__(self, env, stochastics:dict, resources: dict, flags:dict,
+                 shopping_list: dict[str, int], basket: bool, route: str, start_time, ucid, seed):
         self.env = env
         self.resources = resources
         self.shopping_list = shopping_list
@@ -37,7 +38,12 @@ class Customer:
 
         with container.request() as rq:
             # wait until a container is free
+            if self.flags["print"]:
+                print('{:.2f}: {} enters a queue for a basket'.format(self.env.now, self.ucid) if self.basket
+                  else '{:.2f}: {} enters a queue for a shopping cart'.format(self.env.now, self.ucid))
+
             yield rq
+
             if self.flags["print"]:
                 print('{:.2f}: {} picks a basket'.format(self.env.now,self.ucid) if self.basket
                       else '{:.2f}: {} picks a shopping cart'.format(self.env.now, self.ucid))
