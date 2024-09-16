@@ -1,4 +1,4 @@
-from src.queuing import checkoutProcess, breadQueue, cheeseQueue
+from src.queuing import checkoutQueues, breadQueue, cheeseQueue
 
 # generic function for the other departments, likely will have to be changed for the next assignment
 def generic_department_function(customer, env, department_id):
@@ -38,7 +38,7 @@ def checkout_wrapper(customer, env):
 
     if customer.flags["print"]:
         print('{:.2f}: {} arrives at checkout'.format(env.now,customer.ucid))
-    queue = env.process(checkoutProcess(customer, env, customer.resources['checkouts']))
+    queue = env.process(checkoutQueues(customer, env, customer.resources['checkouts']))
     yield queue
 
     if customer.flags["print"]:

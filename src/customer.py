@@ -40,83 +40,33 @@ class Customer:
         s = int((s - h*3600 - m*60))
         return "{:02d}:{:02d}:{:02d}".format(h+8, m,s)
 
+    def DepartmentSubprocess(self):
+        # loop over the departments on the intended path
+        for current_department in self.route:
+            department_routine = function_dict[current_department]  # pick the right routine function
+            routine = self.env.process(department_routine(self, self.env, current_department))
+            yield routine  # execute routine at each department
+
+        # checkout
+        checkout = self.env.process(checkout_wrapper(self, self.env))
+        yield checkout
+
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):
         # wait to enter the store
-
         yield self.env.timeout(self.start_time)
 
-
-
-
-        if self.flags["print"]:
-            print('{:.2f}: {} enters the store'.format(self.env.now, self.ucid))
         # choose basker or cart to pick at the entrance
         if self.basket:
             container = self.resources["baskets"]
         else:
             container = self.resources["shopping carts"]
 
-        with container.request() as rq:
-            # wait until a container is free
-            if self.flags["print"]:
-                print('{:.2f}: {} enters a queue for a basket'.format(self.env.now, self.ucid) if self.basket
-                  else '{:.2f}: {} enters a queue for a shopping cart'.format(self.env.now, self.ucid))
+        # run subprocess while requesting a container
+        subprocess = self.env.process(self.DepartmentSubprocess())
+        processBlock = self.env.process(container.requestBlock(self, subprocess))
+        yield processBlock
 
-            t0 = self.env.now
-            # log queue entry
-            container.queueLog.append(
-                {
-                    "ucid": self.ucid,
-                    "time": t0,
-                    "value": 1
-                }
-            )
-            yield rq
-            t1 = self.env.now
-            # log queue exit
-            container.queueLog.append(
-                {
-                    "ucid": self.ucid,
-                    "time": t1,
-                    "value": -1
-                }
-            )
-            # log container use
-            container.capacityLog.append(
-                {
-                    "ucid": self.ucid,
-                    "time": t1,
-                    "value": 1
-                }
-            )
-
-            # store wait time
-            self.wait_times["entrance"] = t1 - t0
-
-            if self.flags["print"]:
-                print('{:.2f}: {} picks a basket'.format(self.env.now,self.ucid) if self.basket
-                      else '{:.2f}: {} picks a shopping cart'.format(self.env.now, self.ucid))
-
-            # loop over the departments on the intended path
-            # (assuming self.path is a string of lowercase characters)!
-            for current_department in self.route:
-                department_routine = function_dict[current_department]  # pick the right routine function
-                routine = self.env.process(department_routine(self, self.env, current_department))
-                yield routine  # execute routine at each department
-
-            # checkout
-            checkout = self.env.process(checkout_wrapper(self, self.env))
-            yield checkout
-
-        # log container being freed
-        container.capacityLog.append(
-            {
-                "ucid": self.ucid,
-                "time": self.env.now,
-                "value":-1
-            }
-        )
 
 
 

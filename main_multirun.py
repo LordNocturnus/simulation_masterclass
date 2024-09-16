@@ -40,10 +40,6 @@ for i in range(N_RUNS):
     for i in range(4):
         logs["checkouts"][i].append(resources["checkouts"][i].log)
 
-plot_multiple(logs["shopping carts"])
-plot_multiple(logs["bread"])
-plot_multiple(logs["checkouts"][0])
-
 
 
 
