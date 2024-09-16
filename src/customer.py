@@ -65,7 +65,7 @@ class Customer:
 
             t0 = self.env.now
             # log queue entry
-            container.log.append(
+            container.queueLog.append(
                 {
                     "ucid": self.ucid,
                     "time": t0,
@@ -75,13 +75,22 @@ class Customer:
             yield rq
             t1 = self.env.now
             # log queue exit
-            container.log.append(
+            container.queueLog.append(
                 {
                     "ucid": self.ucid,
                     "time": t1,
                     "value": -1
                 }
             )
+            # log container use
+            container.capacityLog.append(
+                {
+                    "ucid": self.ucid,
+                    "time": t1,
+                    "value": 1
+                }
+            )
+
             # store wait time
             self.wait_times["entrance"] = t1 - t0
 
@@ -99,6 +108,16 @@ class Customer:
             # checkout
             checkout = self.env.process(checkout_wrapper(self, self.env))
             yield checkout
+
+        # log container being freed
+        container.capacityLog.append(
+            {
+                "ucid": self.ucid,
+                "time": self.env.now,
+                "value":-1
+            }
+        )
+
 
 
 

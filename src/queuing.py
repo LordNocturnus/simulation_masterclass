@@ -5,22 +5,24 @@ from operator import itemgetter
 import numpy as np
 import matplotlib
 
+class CustomResource(Resource):
+    def __init__(self, env, capacity):
+        Resource.__init__(self, env, capacity)
+        self.queueLog = []
+        self.capacityLog = []
+        self.logs = [self.queueLog, self.capacityLog]
+
+
+
 def createResources(env, n_shoppingcars=45, n_baskets = 300, n_bread=4, n_cheese=3, n_checkouts=4):
-    shoppingCarts = Resource(env, capacity=n_shoppingcars)
-    baskets = Resource(env, capacity=n_baskets)
-    breadClerks = Resource(env, capacity=n_bread)
-    cheeseClerks = Resource(env, capacity=n_cheese)
+    shoppingCarts = CustomResource(env, capacity=n_shoppingcars)
+    baskets = CustomResource(env, capacity=n_baskets)
+    breadClerks = CustomResource(env, capacity=n_bread)
+    cheeseClerks = CustomResource(env, capacity=n_cheese)
 
     checkouts = [
-        Resource(env, capacity=1) for _ in range(n_checkouts)
+        CustomResource(env, capacity=1) for _ in range(n_checkouts)
     ]
-
-    shoppingCarts.log = []
-    baskets.log = []
-    breadClerks.log = []
-    cheeseClerks.log = []
-    for che in checkouts:
-        che.log = []
 
     # return shoppingCarts, baskets, breadClerks, cheeseClerks, checkouts
     return {
@@ -58,16 +60,17 @@ def plot_queue_length(log):
     ax.grid(True)
     plt.show()
 
-def plot_multiple(logargs):
+def plot_multiple(logargs, names=None):
     fig, ax = plt.subplots()
 
-    for i, log in enumerate(logargs):
+    if names == None:
+        names = [None] * len(logargs)
+    for i, (log, label) in enumerate(zip(logargs, names)):
         ql, time = queue_length(log)
 
-        ax.step(time, np.append(ql, ql[-1])[:-1], where='post', label="Run {}".format(i))  # piecewise constant
+        ax.step(time, np.append(ql, ql[-1])[:-1], where='post', label=label)  # piecewise constant
 
     ax.set_xlabel("time [s]")
-    ax.set_ylabel("queue length")
     ax.legend()
 
     ax.grid(True)
@@ -93,8 +96,8 @@ def checkoutProcess(customer, env, checkouts):
 
 
         t0 = env.now
-        # log queue entry
-        checkouts[index].log.append(
+        # queueLog queue entry
+        checkouts[index].queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t0,
@@ -103,12 +106,21 @@ def checkoutProcess(customer, env, checkouts):
         )
         yield checkout_request  # wait to be served
         t1 = env.now
-        # log queue exit
-        checkouts[index].log.append(
+        # queueLog queue exit
+        checkouts[index].queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t1,
                 "value": -1
+            }
+        )
+
+        # log use
+        checkouts[index].capacityLog.append(
+            {
+                "ucid": customer.ucid,
+                "time": t1,
+                "value": 1
             }
         )
 
@@ -135,6 +147,15 @@ def checkoutProcess(customer, env, checkouts):
         if customer.flags["print"]:
             print('{:.2f}: {} paid in {:.2f} seconds'.format(env.now,customer.ucid, t_pay))
 
+    # log end of use
+    checkouts[index].capacityLog.append(
+        {
+            "ucid": customer.ucid,
+            "time": env.now,
+            "value": -1
+        }
+    )
+
 def breadQueue(customer, env, breadClerks):
     with breadClerks.request() as bread_request:
 
@@ -143,8 +164,8 @@ def breadQueue(customer, env, breadClerks):
 
 
         t0 = env.now
-        # log queue entry
-        breadClerks.log.append(
+        # queueLog queue entry
+        breadClerks.queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t0,
@@ -153,8 +174,8 @@ def breadQueue(customer, env, breadClerks):
         )
         yield bread_request  # wait to be served
         t1 = env.now
-        # log queue exit
-        breadClerks.log.append(
+        # queueLog queue exit
+        breadClerks.queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t1,
@@ -181,8 +202,8 @@ def cheeseQueue(customer, env, cheeseClerks):
             print('{:.2f}: {} enters queue at the cheese department'.format(env.now,customer.ucid))
 
         t0 = env.now
-        # log queue entry
-        cheeseClerks.log.append(
+        # queueLog queue entry
+        cheeseClerks.queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t0,
@@ -191,8 +212,8 @@ def cheeseQueue(customer, env, cheeseClerks):
         )
         yield cheese_request  # wait to be served
         t1 = env.now
-        # log queue exit
-        cheeseClerks.log.append(
+        # queueLog queue exit
+        cheeseClerks.queueLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t1,

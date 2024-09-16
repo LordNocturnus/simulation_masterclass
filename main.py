@@ -1,5 +1,5 @@
 import simpy
-from src.queuing import createResources, queue_length, plot_queue_length
+from src.queuing import createResources, queue_length, plot_queue_length, plot_multiple
 from src.customer_factory import CustomerFactory
 import pathlib
 import os
@@ -23,12 +23,14 @@ customer_factory.run()
 
 env.run()
 
-print(customer_factory.average_wait_time())
-plot_queue_length(resources["shopping carts"].log)
-plot_queue_length(resources["baskets"].log)
-plot_queue_length(resources["bread clerks"].log)
-plot_queue_length(resources["cheese clerks"].log)
+# print(customer_factory.average_wait_time())
+# plot_queue_length(resources["shopping carts"].queueLog)
+# plot_queue_length(resources["baskets"].queueLog)
+# plot_queue_length(resources["bread clerks"].queueLog)
+# plot_queue_length(resources["cheese clerks"].queueLog)
 
+
+plot_multiple(resources["shopping carts"].logs)
 
 
 
