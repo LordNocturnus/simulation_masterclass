@@ -17,7 +17,7 @@ class CustomerFactory:
 
         with open(customer_config) as config:
             self.config = json.load(config)["Customer"]
-        self.config["search_bounds"] = tuple(self.config["search_bounds"])
+        # self.config["stochastics"]["search_bounds"] = tuple(self.config["search_bounds"])
 
         self.departments = {}
         for dep in self.config["items"].keys():
@@ -57,4 +57,4 @@ class CustomerFactory:
         route = self.rng.choice(self.routes, p=self.route_probabilities)
         seed = self.rng.integers(0, sys.maxsize, 1)[0]
 
-        return Customer(self.env, self.resources, shopping_list, basket, route, t, self.config["search_bounds"], ucid, seed)
+        return Customer(self.env, self.config["stochastics"], self.resources, self.config["flags"], shopping_list, basket, route, t, ucid, seed)

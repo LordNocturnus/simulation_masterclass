@@ -1,22 +1,22 @@
 from src.queuing import checkoutProcess, breadQueue, cheeseQueue
-import numpy.random as rnd
 
 # generic function for the other departments, likely will have to be changed for the next assignment
-# TODO:placeholders
 def generic_department_function(customer, env, department_id):
-
-    print('{} enters department {}'.format(customer.ucid, department_id))
+    if customer.flags["print"]:
+        print('{} enters department {}'.format(customer.ucid, department_id))
 
     for item in range(customer.shopping_list[department_id]):
-        t_pick = float(rnd.uniform(20, 30, 1))
+        t_pick = float(customer.rng.uniform(customer.stochastics["search_bounds"][0],customer.stochastics["search_bounds"][1], 1))
         yield env.timeout(t_pick)
-        print('{} picks an item at department {} in {:.2f} seconds'.format(customer.ucid, department_id, t_pick))
-
-    print('{} leaves department {}'.format(customer.ucid, department_id))
+        if customer.flags["print"]:
+            print('{} picks an item at department {} in {:.2f} seconds'.format(customer.ucid, department_id, t_pick))
+    if customer.flags["print"]:
+        print('{} leaves department {}'.format(customer.ucid, department_id))
 
 # wrapper for the queue functions, adding the enter and leave statements!
 def department_cd_function(customer, env, department_id):
-    print('{} enters department {}'.format(customer.ucid, department_id))
+    if customer.flags["print"]:
+        print('{} enters department {}'.format(customer.ucid, department_id))
 
     match department_id:
         case 'C':
@@ -26,14 +26,18 @@ def department_cd_function(customer, env, department_id):
 
     yield queue
 
-    print('{} leaves department {}'.format(customer.ucid, department_id))
+    if customer.flags["print"]:
+        print('{} leaves department {}'.format(customer.ucid, department_id))
 
 # wrapper for the checkout queue, including pring statements
 def checkout_wrapper(customer, env):
-    print('{} arrives at checkout'.format(customer.ucid))
+    if customer.flags["print"]:
+        print('{} arrives at checkout'.format(customer.ucid))
     queue = env.process(checkoutProcess(customer, env, customer.resources['checkouts']))
     yield queue
-    print('{} leaves the store at {}'.format(customer.ucid, env.now))
+
+    if customer.flags["print"]:
+        print('{} leaves the store at {:.2f}'.format(customer.ucid, env.now))
 
 
 

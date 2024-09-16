@@ -29,6 +29,16 @@
       "ABCDEFG": 0.4,
       "BCDEAFG": 0.6
     },
-    "search_bounds": [20, 30]
+    "stochastics" : {
+      "search_bounds": [20, 30],
+      "payment_bounds" : [40, 60],
+      "scan_vars" : [1.1, 0.11],
+      "bread_vars" : [120, 12],
+      "cheese_vars" : [60, 6]
+    },
+    "flags": {
+      "print" : true,
+      "save" : true
+    }
   }
 }

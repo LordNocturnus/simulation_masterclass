@@ -4,7 +4,7 @@ import numpy.random as npr
 
 class Customer:
 
-    def __init__(self, env, resources: dict, shopping_list: dict[str, int], basket: bool, route: str, start_time, search_bounds, ucid, seed):
+    def __init__(self, env, stochastics:dict, resources: dict, flags:dict, shopping_list: dict[str, int], basket: bool, route: str, start_time, ucid, seed):
         self.env = env
         self.resources = resources
         self.shopping_list = shopping_list
@@ -12,8 +12,9 @@ class Customer:
         self.route = route
         self.start_time = start_time
         self.ucid = ucid # unique customer id
-        self.search_bounds = search_bounds
         self.rng = npr.default_rng(seed)
+        self.stochastics = stochastics
+        self.flags = flags
 
         self.action = self.env.process(self.run())
 
@@ -25,7 +26,8 @@ class Customer:
     def run(self):
         # wait to enter the store
         yield self.env.timeout(self.start_time)
-        print('{} enters the store at {}'.format(self.ucid, self.env.now))
+        if self.flags["print"]:
+            print('{} enters the store at {:.2f}'.format(self.ucid, self.env.now))
 
         # choose basker or cart to pick at the entrance
         if self.basket:
@@ -36,7 +38,8 @@ class Customer:
         with container.request() as rq:
             # wait until a container is free
             yield rq
-            print('{} picks a basket'.format(self.ucid) if self.basket else '{} picks a shopping cart'.format(self.ucid))
+            if self.flags["print"]:
+                print('{} picks a basket'.format(self.ucid) if self.basket else '{} picks a shopping cart'.format(self.ucid))
 
             # loop over the departments on the intended path
             # (assuming self.path is a string of lowercase characters)!
