@@ -5,11 +5,15 @@ def generic_department_function(customer, env, department_id):
     if customer.flags["print"]:
         print('{:.2f}: {} enters department {}'.format(env.now, customer.ucid, department_id))
 
+    t_tot_pick = 0
     for item in range(customer.shopping_list[department_id]):
         t_pick = float(customer.rng.uniform(customer.stochastics["search_bounds"][0],customer.stochastics["search_bounds"][1], 1))
+        t_tot_pick += t_pick
         yield env.timeout(t_pick)
-        if customer.flags["print"]:
-            print('{:.2f}: {} picks an item at department {} in {:.2f} seconds'.format(env.now,customer.ucid, department_id, t_pick))
+
+    if customer.flags["print"]:
+        print('{:.2f}: {} picks {} items at department {} in {:.2f} seconds'.format(env.now,customer.ucid,
+                                                                                    customer.shopping_list[department_id], department_id, t_tot_pick))
     if customer.flags["print"]:
         print('{:.2f}: {} leaves department {}'.format(env.now,customer.ucid, department_id))
 
