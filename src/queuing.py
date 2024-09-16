@@ -25,29 +25,28 @@ class CustomResource(Resource):
             print('{:.2f}: {} enters a queue'.format(self.env.now, customer.ucid))
 
         t0 = self.env.now
+        self.queueLog.append(
+            {
+                "ucid": customer.ucid,
+                "time": t0,
+                "value": 1
+            }
+        )
         yield req  # wait to be served
         t1 = self.env.now
+        # queueLog queue exit
+        self.queueLog.append(
+            {
+                "ucid": customer.ucid,
+                "time": t1,
+                "value": -1
+            }
+        )
 
         if customer.flags["print"]:
             print('{:.2f}: {} is served'.format(self.env.now, customer.ucid))
 
-        if t0 != t1: # if can't be served immediately,  log queue time
-            self.queueLog.append(
-                {
-                    "ucid": customer.ucid,
-                    "time": t0,
-                    "value": 1
-                }
-            )
 
-            # queueLog queue exit
-            self.queueLog.append(
-                {
-                    "ucid": customer.ucid,
-                    "time": t1,
-                    "value": -1
-                }
-            )
 
         # log use
         self.capacityLog.append(
@@ -60,7 +59,8 @@ class CustomResource(Resource):
 
         yield subprocess
 
-        #log end of use
+        self.release(req)
+        # log end of use
         self.capacityLog.append(
             {
                 "ucid": customer.ucid,
@@ -68,7 +68,6 @@ class CustomResource(Resource):
                 "value": -1
             }
         )
-        self.release(req)
 
 
     def postprocess_log(self, log):
@@ -81,20 +80,36 @@ class CustomResource(Resource):
         time = np.delete(time, indices[0])
 
         return cs, time
-    def plotAvailability(self):
-        fig, ax = plt.subplots()
 
+    def availability(self):
         currentlyUsed, tUse = self.postprocess_log(self.capacityLog)
         queueLength, tQueue = self.postprocess_log(self.queueLog)
 
         currentlyAvailable = self.capacity - currentlyUsed
         overflow = -queueLength
 
-        ax.step(tUse, np.append(currentlyAvailable, currentlyAvailable[-1])[:-1], where='post',
-                label="Available Resource Count")  # piecewise constant
-        ax.step(tQueue, np.append(overflow, overflow[-1])[:-1], where='post',
+        # 1. Combine the time points
+        t_combined = np.union1d(tUse, tQueue)
 
-                label="Overflow (Queue Size)")  # piecewise constant
+        # 2. Interpolate x1 and x2 at the combined time points
+        # Use 'previous' values (piecewise constant)
+        x1_interp = currentlyAvailable[np.searchsorted(tUse, t_combined, side='right') - 1]
+        x2_interp = overflow[np.searchsorted(tQueue, t_combined, side='right') - 1]
+
+        # 3. Compute the sum of x1 and x2 at each point in time
+        x_sum = x1_interp + x2_interp
+
+        return x_sum, t_combined
+
+
+
+    def plotAvailability(self):
+        fig, ax = plt.subplots()
+
+        availability, time = self.availability()
+
+        ax.step(time, np.append(availability, availability[-1])[:-1], where='post')  # piecewise constant
+        ax.axhline(0, color='k', linestyle='dashed')
 
         ax.set_xlabel("time [s]")
         ax.set_ylabel("resource count")

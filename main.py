@@ -25,12 +25,11 @@ env.run()
 
 
 # resources["checkouts"][0].waitTimeHistogram()
-# resources["shopping carts"].waitTimeHistogram()
+resources["shopping carts"].plotAvailability()
+resources["bread clerks"].plotAvailability()
+
 # resources["shopping carts"].useTimeHistogram()
 
-print(resources["shopping carts"].averageWaitTime(), resources["shopping carts"].averageUseTime())
-print(resources["baskets"].averageWaitTime(), resources["baskets"].averageUseTime())
-print(resources["checkouts"][0].averageWaitTime(), resources["checkouts"][0].averageUseTime())
 
 
 
