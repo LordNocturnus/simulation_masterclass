@@ -35,6 +35,7 @@ def department_cd_function(customer, env, department_id):
 
 # wrapper for the checkout queue, including pring statements
 def checkout_wrapper(customer, env):
+
     if customer.flags["print"]:
         print('{:.2f}: {} arrives at checkout'.format(env.now,customer.ucid))
     queue = env.process(checkoutProcess(customer, env, customer.resources['checkouts']))

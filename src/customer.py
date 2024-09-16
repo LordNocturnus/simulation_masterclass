@@ -16,6 +16,13 @@ class Customer:
         self.rng = npr.default_rng(seed)
         self.stochastics = stochastics
         self.flags = flags
+        # initialize wait times as 0.0
+        self.wait_times = {
+            "entrance" : 0.0,
+            "bread" : 0.0,
+            "cheese" : 0.0,
+            "checkout" : 0.0
+        }
 
         self.action = self.env.process(self.run())
 
@@ -36,7 +43,12 @@ class Customer:
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):
         # wait to enter the store
+
         yield self.env.timeout(self.start_time)
+
+
+
+
         if self.flags["print"]:
             print('{:.2f}: {} enters the store'.format(self.env.now, self.ucid))
         # choose basker or cart to pick at the entrance
@@ -51,7 +63,27 @@ class Customer:
                 print('{:.2f}: {} enters a queue for a basket'.format(self.env.now, self.ucid) if self.basket
                   else '{:.2f}: {} enters a queue for a shopping cart'.format(self.env.now, self.ucid))
 
+            t0 = self.env.now
+            # log queue entry
+            container.log.append(
+                {
+                    "ucid": self.ucid,
+                    "time": t0,
+                    "value": 1
+                }
+            )
             yield rq
+            t1 = self.env.now
+            # log queue exit
+            container.log.append(
+                {
+                    "ucid": self.ucid,
+                    "time": t1,
+                    "value": -1
+                }
+            )
+            # store wait time
+            self.wait_times["entrance"] = t1 - t0
 
             if self.flags["print"]:
                 print('{:.2f}: {} picks a basket'.format(self.env.now,self.ucid) if self.basket

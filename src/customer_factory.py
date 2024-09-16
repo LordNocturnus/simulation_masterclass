@@ -58,3 +58,20 @@ class CustomerFactory:
         seed = self.rng.integers(0, sys.maxsize, 1)[0]
 
         return Customer(self.env, self.config["stochastics"], self.resources, self.config["flags"], shopping_list, basket, route, t, ucid, seed)
+
+    def average_wait_time(self):
+        N_customers = len(self.customers)
+        return {
+            "baskets" : sum([customer.wait_times['entrance'] for customer in self.customers if customer.basket]) / N_customers,
+            "shopping carts": sum(
+                [customer.wait_times['entrance'] for customer in self.customers if not customer.basket]) / N_customers,
+            "bread": sum(
+                [customer.wait_times['bread'] for customer in self.customers]) / N_customers,
+            "cheese": sum(
+                [customer.wait_times['cheese'] for customer in self.customers]) / N_customers,
+            "checkout": sum(
+                [customer.wait_times['checkout'] for customer in self.customers]) / N_customers,
+
+        }
+
+
