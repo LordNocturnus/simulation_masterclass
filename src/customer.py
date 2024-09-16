@@ -23,13 +23,22 @@ class Customer:
         # total number of items in the shopping list
         return sum([value for key, value in self.shopping_list.items()])
 
+    def time_string(self, time=None):
+        if time:
+            s = time
+        else:
+            s = self.env.now
+        h = int(s//3600)
+        m = int((s-h*3600)//60)
+        s = int((s - h*3600 - m*60))
+        return "{:02d}:{:02d}:{:02d}".format(h+8, m,s)
+
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):
         # wait to enter the store
         yield self.env.timeout(self.start_time)
         if self.flags["print"]:
             print('{:.2f}: {} enters the store'.format(self.env.now, self.ucid))
-
         # choose basker or cart to pick at the entrance
         if self.basket:
             container = self.resources["baskets"]
