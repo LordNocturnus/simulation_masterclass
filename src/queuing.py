@@ -14,8 +14,11 @@ class CustomResource(Resource):
         self.queueLog = []
         self.capacityLog = []
         self.logs = [self.queueLog, self.capacityLog]
+        self.ucids = set({})
 
     def requestBlock(self, customer, subprocess):
+        self.ucids.add(customer.ucid)  # add ucid to set of users of this resource
+
         req = self.request()
 
         if customer.flags["print"]:
@@ -67,6 +70,7 @@ class CustomResource(Resource):
         )
         self.release(req)
 
+
     def postprocess_log(self, log):
         time = np.array([el["time"] for el in log])
         entries = np.array([el["value"] for el in log])
@@ -77,7 +81,7 @@ class CustomResource(Resource):
         time = np.delete(time, indices[0])
 
         return cs, time
-    def plot_use(self):
+    def plotAvailability(self):
         fig, ax = plt.subplots()
 
         currentlyUsed, tUse = self.postprocess_log(self.capacityLog)
@@ -98,6 +102,72 @@ class CustomResource(Resource):
 
         ax.grid(True)
         plt.show()
+
+    def getWaitTime(self, ucid : int):
+        timestamps = [logEntry["time"] for logEntry in self.queueLog if logEntry["ucid"] == ucid]
+        if timestamps:
+            return timestamps[-1] - timestamps[0]
+        else:
+            return 0
+
+    def getUseTime(self, ucid: int):
+        timestamps = [logEntry["time"] for logEntry in self.capacityLog if logEntry["ucid"] == ucid]
+        return timestamps[-1] - timestamps[0]
+
+    def waitTimeDictionary(self):
+        dict = {}
+        for ucid in self.ucids:
+            dict[str(ucid)] = self.getWaitTime(ucid)
+
+        return dict
+
+    def useTimeDictionary(self):
+        dict = {}
+        for ucid in self.ucids:
+            dict[str(ucid)] = self.getUseTime(ucid)
+
+        return dict
+
+    def averageWaitTime(self):
+        dict = self.waitTimeDictionary()
+        ave = sum([val for key, val in dict.items()]) / len(dict)
+        return ave
+
+    def averageUseTime(self):
+        dict = self.useTimeDictionary()
+        ave = sum([val for key, val in dict.items()]) / len(dict)
+        return ave
+    def waitTimeHistogram(self):
+
+        fig, ax = plt.subplots()
+        data = self.waitTimeDictionary()
+
+        ax.hist(data.values(), bins=25)
+
+        ax.set_ylabel("no. of customers")
+        ax.set_xlabel("wait time [s]")
+        ax.legend()
+
+        ax.grid(True)
+        plt.show()
+
+    def useTimeHistogram(self):
+
+        fig, ax = plt.subplots()
+        data = self.useTimeDictionary()
+
+        ax.hist(data.values(), bins=25)
+
+        ax.set_ylabel("no. of customers")
+        ax.set_xlabel("use time [s]")
+        ax.legend()
+
+        ax.grid(True)
+        plt.show()
+
+
+
+
         
 
 def createResources(env, n_shoppingcars=45, n_baskets = 300, n_bread=4, n_cheese=3, n_checkouts=4):
