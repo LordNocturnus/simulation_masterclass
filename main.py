@@ -5,10 +5,6 @@ import pathlib
 import os
 from matplotlib import pyplot as plt
 
-# TODO: *actually* export and save data (printing doesn't count)
-# TODO: postprocessing?
-# TODO: implement flags
-
 # ensure correct cwd
 os.chdir(pathlib.Path(__file__).parent)
 

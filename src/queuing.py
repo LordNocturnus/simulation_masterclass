@@ -58,6 +58,21 @@ def plot_queue_length(log):
     ax.grid(True)
     plt.show()
 
+def plot_multiple(logargs):
+    fig, ax = plt.subplots()
+
+    for i, log in enumerate(logargs):
+        ql, time = queue_length(log)
+
+        ax.step(time, np.append(ql, ql[-1])[:-1], where='post', label="Run {}".format(i))  # piecewise constant
+
+    ax.set_xlabel("time [s]")
+    ax.set_ylabel("queue length")
+    ax.legend()
+
+    ax.grid(True)
+    plt.show()
+
 
 
 def checkoutProcess(customer, env, checkouts):
