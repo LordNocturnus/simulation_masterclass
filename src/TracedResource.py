@@ -10,14 +10,27 @@ from simpy.resources.resource import Request, Release
 class TracedResource(Resource):
     
     def __init__(self, env, capacity, name="Unnamed Resource"):
-        Resource.__init__(self, env, capacity)
+        super().__init__(env, capacity)
         self.env = env
         self.name = name
+
+        self.log_event = []
+        self.log_time = []
+
         self.queueLog = []
         self.capacityLog = []
         self.demandLog = []
-        self.logs = [self.queueLog, self.capacityLog]
         self.ucids = set({})
+
+    def request(self):
+        self.log_event.append(1)
+        self.log_time.append(self.env.now)
+        return super().request()
+
+    def release(self, request):
+        self.log_event.append(-1)
+        self.log_time.append(self.env.now)
+        return super().release(request)
 
     def requestBlock(self, customer, subprocess):
         """
@@ -101,7 +114,6 @@ class TracedResource(Resource):
         )
         customer.use_times[self.name] = t2 - t1
 
-
     def postprocess_log(self, log):
         time = np.array([el["time"] for el in log])
         entries = np.array([el["value"] for el in log])
@@ -114,11 +126,10 @@ class TracedResource(Resource):
         return cs, time
 
     def availability(self):
-        demand, time = self.postprocess_log(self.demandLog)
+        demand = np.cumsum(np.asarray(self.log_event))
         available = self.capacity - demand
 
-        return available, time
-
+        return available, np.asarray(self.log_time)
 
     def plotAvailability(self):
         fig, ax = plt.subplots()
@@ -137,7 +148,6 @@ class TracedResource(Resource):
         ax.axhspan(ymin=0, ymax=ymax, facecolor='g', alpha=0.25)
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(0, max(time))
-
 
         ax.grid(True)
         plt.show()

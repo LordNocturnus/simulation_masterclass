@@ -63,11 +63,3 @@ class Customer:
         subprocess = self.env.process(self.DepartmentSubprocess())
         processBlock = self.env.process(container.requestBlock(self, subprocess))
         yield processBlock
-
-
-
-
-
-
-
-
