@@ -16,7 +16,19 @@ class Customer:
         self.rng = npr.default_rng(seed)
         self.stochastics = stochastics
         self.flags = flags
-        # initialize wait times and use times of resources
+
+        # time stamps
+        self.arrival_times = {
+
+        }
+        self.serve_times = {
+
+        }
+        self.release_times = {
+
+        }
+
+        # time intervals
         self.wait_times = {
         }
         self.use_times = {

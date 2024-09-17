@@ -37,32 +37,33 @@ class TracedResource(Resource):
         if customer.flags["print"]:
             print('{:.2f}: {} enters a {} queue'.format(self.env.now, customer.ucid, self.name))
 
-        t0 = self.env.now
+        customer.arrival_times[self.name] = self.env.now
         self.queueLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t0,
+                "time": customer.arrival_times[self.name],
                 "value": 1
             }
         )
         self.demandLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t0,
+                "time": customer.arrival_times[self.name],
                 "value": 1
             }
         )
         yield req  # wait to be served
-        t1 = self.env.now
+        customer.serve_times[self.name] = self.env.now
+
         # queueLog queue exit
         self.queueLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t1,
+                "time": customer.serve_times[self.name],
                 "value": -1
             }
         )
-        customer.wait_times[self.name] = t1 - t0
+        customer.wait_times[self.name] = customer.serve_times[self.name] - customer.arrival_times[self.name]
 
         if customer.flags["print"]:
             print('{:.2f}: {} is served at {}'.format(self.env.now, customer.ucid, self.name))
@@ -73,33 +74,34 @@ class TracedResource(Resource):
         self.capacityLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t1,
+                "time": customer.serve_times[self.name],
                 "value": 1
             }
         )
 
         yield subprocess
 
+        customer.release_times[self.name] = self.env.now
         self.release(req)
 
-        t2 = self.env.now
 
         # log end of use
         self.capacityLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t2,
+                "time": customer.release_times[self.name],
                 "value": -1
             }
         )
         self.demandLog.append(
             {
                 "ucid": customer.ucid,
-                "time": t2,
+                "time": customer.release_times[self.name],
                 "value":-1
             }
         )
-        customer.use_times[self.name] = t2 - t1
+
+        customer.use_times[self.name] = customer.release_times[self.name] - customer.serve_times[self.name]
 
 
     def postprocess_log(self, log):
@@ -211,7 +213,7 @@ def createResources(env, n_shoppingcars=45, n_baskets = 300, n_bread=4, n_cheese
     cheeseClerks = TracedResource(env, capacity=n_cheese, name ='cheese clerks')
 
     checkouts = [
-        TracedResource(env, capacity=1, name = "checkout") for _ in range(n_checkouts)
+        TracedResource(env, capacity=1, name = "checkouts") for _ in range(n_checkouts)
     ]
 
     return {

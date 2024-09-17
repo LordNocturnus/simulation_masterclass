@@ -21,6 +21,8 @@ ms = Simulation(config, N_RUNS=3)
 ms.run()
 
 ms.printResourceUse()
+ms.printThroughputData()
+ms.plotThroughputHistogram()
 ms.plotAvailability("shopping carts")
 
 
