@@ -129,6 +129,11 @@ class TracedResource(Resource):
 
         return available, np.asarray(self.log_time)
 
+    def queue_length(self):
+        available, time = self.availability()
+        available[available > 0] = 0
+        return available * -1, time
+
     def plotAvailability(self):
         fig, ax = plt.subplots()
 
