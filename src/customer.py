@@ -2,6 +2,7 @@ from src.queuing import checkoutProcess, breadQueue, cheeseQueue
 from src.department import function_dict, checkout_wrapper, generic_department_function
 import numpy.random as npr
 
+
 class Customer:
 
     def __init__(self, env, stochastics:dict, resources: dict, flags:dict,
@@ -17,10 +18,8 @@ class Customer:
         self.stochastics = stochastics
         self.flags = flags
         # initialize wait times and use times of resources
-        self.wait_times = {
-        }
-        self.use_times = {
-        }
+        self.wait_times = {}
+        self.use_times = {}
 
         self.action = self.env.process(self.run())
 
