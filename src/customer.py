@@ -61,5 +61,5 @@ class Customer:
 
         # run subprocess while requesting a container
         subprocess = self.env.process(self.DepartmentSubprocess())
-        processBlock = self.env.process(container.request_block(self, subprocess))
-        yield processBlock
+        process_block = self.env.process(container.request_block(self, subprocess))
+        yield process_block

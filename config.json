@@ -37,7 +37,7 @@
       "cheese_vars" : [60, 6]
     },
     "flags": {
-      "print" : true,
+      "print" : false,
       "save" : true
     }
   },
