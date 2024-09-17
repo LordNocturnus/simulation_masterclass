@@ -90,14 +90,14 @@ class Simulation:
             if isinstance(self.resourceLog[run][resource],
                           list):  # if it's a list (meaning we're dealing with checkouts)
                 for res in self.resourceLog[run][resource]:
-                    queue_length, time = res.postprocess_log(res.queueLog)
-                    numerator += sum(queue_length[:-1] * (time[1:] - time[:-1]))
-                    denominator += max(time) - min(time)
+                    queue_length, time = res.queue_length()
+                    numerator += np.sum(queue_length[:-1] * np.diff(time))
+                    denominator += max(time)
             else:
                 res = self.resourceLog[run][resource]
-                queue_length, time = res.postprocess_log(res.queueLog)
-                numerator += sum(queue_length[:-1] * (time[1:] - time[:-1]))
-                denominator += max(time) - min(time)
+                queue_length, time = res.queue_length()
+                numerator += np.sum(queue_length[:-1] * np.diff(time))
+                denominator += max(time)
         return numerator / denominator
 
     def plot_availability(self, resource):  # for checkouts, take the first one
