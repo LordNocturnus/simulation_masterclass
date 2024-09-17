@@ -1,10 +1,7 @@
 import matplotlib.pyplot as plt
-import simpy
 from simpy import Resource
 from operator import itemgetter
 import numpy as np
-import matplotlib
-from simpy.resources.resource import Request, Release
 
 
 class TracedResource(Resource):
@@ -217,25 +214,6 @@ class TracedResource(Resource):
 
         ax.grid(True)
         plt.show()
-
-
-def create_resources(env, n_shopping_carts=45, n_baskets=300, n_bread=4, n_cheese=3, n_checkouts=4):
-    shopping_carts = TracedResource(env, capacity=n_shopping_carts, name="shopping carts")
-    baskets = TracedResource(env, capacity=n_baskets, name="baskets")
-    bread_clerks = TracedResource(env, capacity=n_bread, name='bread clerks')
-    cheese_clerks = TracedResource(env, capacity=n_cheese, name='cheese clerks')
-
-    checkouts = [
-        TracedResource(env, capacity=1, name="checkout") for _ in range(n_checkouts)
-    ]
-
-    return {
-        "shopping carts": shopping_carts,
-        "baskets": baskets,
-        "bread clerks": bread_clerks,
-        "cheese clerks": cheese_clerks,
-        "checkouts": checkouts
-    }
 
 
 def checkout_process(customer, env):
