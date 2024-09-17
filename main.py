@@ -17,11 +17,11 @@ config_path = pathlib.Path(os.getcwd()).joinpath("config.json")
 with open(config_path) as config_p:  # if it's a path, read the file
     config = json.load(config_p)
 
-ms = Simulation(config, N_RUNS=3)
+ms = Simulation(config, runs=3)
 ms.run()
 
-ms.printResourceUse()
-ms.plotAvailability("shopping carts")
+ms.print_resource_use()
+ms.plot_availability("shopping carts")
 
 
 

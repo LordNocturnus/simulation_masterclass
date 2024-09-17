@@ -6,28 +6,31 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+
+
 class Simulation():
     """
     Simulation class, used to run the supermarket model
     the class stores simulation results for postprocessing
     """
-    def __init__(self, config, N_RUNS=1):
-        self.N_RUNS = N_RUNS
+
+    def __init__(self, config, runs=1):
+        self.runs = runs
 
         if isinstance(config, dict):
             self.config = config
         else:
-            with open(config) as config: # if it's a path, read the file
+            with open(config) as config:  # if it's a path, read the file
                 self.config = json.load(config)["Customer"]
-        self.config = config
-        self.resourceLog = [None] * N_RUNS
-        self.customerLog = [None] * N_RUNS
+
+        self.resourceLog = []
+        self.customerLog = []
 
     def run(self):
         """
         main function used for running the simulation(s)
         """
-        for run in range(self.N_RUNS):
+        for run in range(self.runs):
             env = simpy.Environment()
 
             # initialize shared resources
@@ -45,61 +48,62 @@ class Simulation():
             env.run()
 
             # store results
-            self.resourceLog[run] = resources
-            self.customerLog[run] = customer_factory
+            self.resourceLog.append(resources)
+            self.customerLog.append(customer_factory)
 
-    def averageWaitTime(self, resource):  # for checkouts, takes the average over all four
+    def average_wait_time(self, resource):  # for checkouts, takes the average over all four
         numerator = 0
         denominator = 0
-        for run in range(self.N_RUNS):
-            if isinstance(self.resourceLog[run][resource], list): # if it's a list (meaning we're dealing with checkouts)
-                for res in self.resourceLog[run][resource]:
-                    dict = res.waitTimeDictionary()
-                    numerator += sum([val for key, val in dict.items()])
-                    denominator += len(dict)
-            else:
-                dict = self.resourceLog[run][resource].waitTimeDictionary()
-                numerator += sum([val for key, val in dict.items()])
-                denominator += len(dict)
-        return numerator / denominator
-
-    def averageUseTime(self, resource):  # for checkouts, takes the average over all four
-        numerator = 0
-        denominator = 0
-        for run in range(self.N_RUNS):
-            if isinstance(self.resourceLog[run][resource], list): # if it's a list (meaning we're dealing with checkouts)
-                for res in self.resourceLog[run][resource]:
-                    dict = res.useTimeDictionary()
-                    numerator += sum([val for key, val in dict.items()])
-                    denominator += len(dict)
-            else:
-                dict = self.resourceLog[run][resource].useTimeDictionary()
-                numerator += sum([val for key, val in dict.items()])
-                denominator += len(dict)
-        return numerator / denominator
-
-    def averageQueueLength(self, resource):
-        numerator = 0
-        denominator = 0
-        for run in range(self.N_RUNS):
+        for run in range(self.runs):
             if isinstance(self.resourceLog[run][resource],
                           list):  # if it's a list (meaning we're dealing with checkouts)
                 for res in self.resourceLog[run][resource]:
-                    queueLength, time = res.postprocess_log(res.queueLog)
-                    numerator += sum(queueLength[:-1] * (time[1:] - time[:-1]))
+                    wait_time = res.waitTimeDictionary()
+                    numerator += sum([val for key, val in wait_time.items()])
+                    denominator += len(wait_time)
+            else:
+                wait_time = self.resourceLog[run][resource].waitTimeDictionary()
+                numerator += sum([val for key, val in wait_time.items()])
+                denominator += len(wait_time)
+        return numerator / denominator
+
+    def average_use_time(self, resource):  # for checkouts, takes the average over all four
+        numerator = 0
+        denominator = 0
+        for run in range(self.runs):
+            if isinstance(self.resourceLog[run][resource],
+                          list):  # if it's a list (meaning we're dealing with checkouts)
+                for res in self.resourceLog[run][resource]:
+                    use_time = res.useTimeDictionary()
+                    numerator += sum([val for key, val in use_time.items()])
+                    denominator += len(use_time)
+            else:
+                use_time = self.resourceLog[run][resource].useTimeDictionary()
+                numerator += sum([val for key, val in use_time.items()])
+                denominator += len(use_time)
+        return numerator / denominator
+
+    def average_queue_length(self, resource):
+        numerator = 0
+        denominator = 0
+        for run in range(self.runs):
+            if isinstance(self.resourceLog[run][resource],
+                          list):  # if it's a list (meaning we're dealing with checkouts)
+                for res in self.resourceLog[run][resource]:
+                    queue_length, time = res.postprocess_log(res.queueLog)
+                    numerator += sum(queue_length[:-1] * (time[1:] - time[:-1]))
                     denominator += max(time) - min(time)
             else:
                 res = self.resourceLog[run][resource]
-                queueLength, time = res.postprocess_log(res.queueLog)
-                numerator += sum(queueLength[:-1] * (time[1:] - time[:-1]))
+                queue_length, time = res.postprocess_log(res.queueLog)
+                numerator += sum(queue_length[:-1] * (time[1:] - time[:-1]))
                 denominator += max(time) - min(time)
         return numerator / denominator
 
-
-    def plotAvailability(self, resource): # for checkouts, take the first one
+    def plot_availability(self, resource):  # for checkouts, take the first one
         fig, ax = plt.subplots()
 
-        for run in range(self.N_RUNS):
+        for run in range(self.runs):
 
             if isinstance(self.resourceLog[run][resource], list):
                 availability, time = self.resourceLog[run][resource][0].availability()
@@ -121,19 +125,17 @@ class Simulation():
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(0, max(time))
 
-
         ax.grid(True)
         plt.show()
 
-    def printResourceUse(self):
+    def print_resource_use(self):
         for resource in self.resourceLog[0].keys():
-            aql = self.averageQueueLength(resource)
-            awt = self.averageWaitTime(resource)
-            aut = self.averageUseTime(resource)
+            aql = self.average_queue_length(resource)
+            awt = self.average_wait_time(resource)
+            aut = self.average_use_time(resource)
             print('---------------------------------')
             print("use data for {}".format(resource))
             print("average queue length: {:.2f}".format(aql))
             print("average wait time [s]: {:.2f}".format(awt))
             print("average use time [s]: {:.2f}".format(aut))
         print('---------------------------------')
-
