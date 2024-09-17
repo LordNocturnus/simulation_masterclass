@@ -1,4 +1,4 @@
-from src.queuing import checkoutProcess, breadQueue, cheeseQueue
+from src.TracedResource import checkoutProcess, breadQueue, cheeseQueue
 from src.department import function_dict, checkout_wrapper, generic_department_function
 import numpy.random as npr
 

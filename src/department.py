@@ -1,4 +1,4 @@
-from src.queuing import checkoutQueues, breadQueue, cheeseQueue
+from src.TracedResource import checkoutQueues, breadQueue, cheeseQueue
 
 # generic function for the other departments, likely will have to be changed for the next assignment
 def generic_department_function(customer, env, department_id):
