@@ -1,5 +1,5 @@
 import simpy
-from src.queuing import createResources
+from src.TracedResource import createResources
 from src.simulation import Simulation
 from src.customer_factory import CustomerFactory
 import pathlib

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class Simulation():
+class Simulation:
     """
     Simulation class, used to run the supermarket model
     the class stores simulation results for postprocessing
