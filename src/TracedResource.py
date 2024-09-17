@@ -32,7 +32,7 @@ class TracedResource(Resource):
         self.log_time.append(self.env.now)
         return super().release(request)
 
-    def requestBlock(self, customer, subprocess):
+    def request_block(self, customer, subprocess):
         """
         wrapper around the .request() method, including the logging of relevant events
         function essentially replaces the "with self.request() as req:" block
@@ -134,7 +134,7 @@ class TracedResource(Resource):
         available[available > 0] = 0
         return available * -1, time
 
-    def plotAvailability(self):
+    def plot_availability(self):
         fig, ax = plt.subplots()
 
         availability, time = self.availability()
@@ -155,45 +155,45 @@ class TracedResource(Resource):
         ax.grid(True)
         plt.show()
 
-    def getWaitTime(self, ucid: int):
+    def get_wait_time(self, ucid: int):
         timestamps = [logEntry["time"] for logEntry in self.queueLog if logEntry["ucid"] == ucid]
         if timestamps:
             return timestamps[-1] - timestamps[0]
         else:
             return 0
 
-    def getUseTime(self, ucid: int):
+    def get_use_time(self, ucid: int):
         timestamps = [logEntry["time"] for logEntry in self.capacityLog if logEntry["ucid"] == ucid]
         return timestamps[-1] - timestamps[0]
 
-    def waitTimeDictionary(self):
-        dict = {}
+    def wait_time_dictionary(self):
+        ret = {}
         for ucid in self.ucids:
-            dict[str(ucid)] = self.getWaitTime(ucid)
+            ret[str(ucid)] = self.get_wait_time(ucid)
 
-        return dict
+        return ret
 
-    def useTimeDictionary(self):
-        dict = {}
+    def use_time_dictionary(self):
+        ret = {}
         for ucid in self.ucids:
-            dict[str(ucid)] = self.getUseTime(ucid)
+            ret[str(ucid)] = self.get_use_time(ucid)
 
-        return dict
+        return ret
 
-    def averageWaitTime(self):
-        dict = self.waitTimeDictionary()
-        ave = sum([val for key, val in dict.items()]) / len(dict)
+    def average_wait_time(self):
+        data = self.wait_time_dictionary()
+        ave = sum([val for key, val in data.items()]) / len(data)
         return ave
 
-    def averageUseTime(self):
-        dict = self.useTimeDictionary()
-        ave = sum([val for key, val in dict.items()]) / len(dict)
+    def average_use_time(self):
+        data = self.use_time_dictionary()
+        ave = sum([val for key, val in data.items()]) / len(data)
         return ave
 
-    def waitTimeHistogram(self):
+    def wait_time_histogram(self):
 
         fig, ax = plt.subplots()
-        data = self.waitTimeDictionary()
+        data = self.wait_time_dictionary()
 
         ax.hist(data.values(), bins=25)
 
@@ -204,10 +204,10 @@ class TracedResource(Resource):
         ax.grid(True)
         plt.show()
 
-    def useTimeHistogram(self):
+    def use_time_histogram(self):
 
         fig, ax = plt.subplots()
-        data = self.useTimeDictionary()
+        data = self.use_time_dictionary()
 
         ax.hist(data.values(), bins=25)
 
@@ -219,26 +219,26 @@ class TracedResource(Resource):
         plt.show()
 
 
-def createResources(env, n_shoppingcars=45, n_baskets=300, n_bread=4, n_cheese=3, n_checkouts=4):
-    shoppingCarts = TracedResource(env, capacity=n_shoppingcars, name="shopping carts")
+def create_resources(env, n_shopping_carts=45, n_baskets=300, n_bread=4, n_cheese=3, n_checkouts=4):
+    shopping_carts = TracedResource(env, capacity=n_shopping_carts, name="shopping carts")
     baskets = TracedResource(env, capacity=n_baskets, name="baskets")
-    breadClerks = TracedResource(env, capacity=n_bread, name='bread clerks')
-    cheeseClerks = TracedResource(env, capacity=n_cheese, name='cheese clerks')
+    bread_clerks = TracedResource(env, capacity=n_bread, name='bread clerks')
+    cheese_clerks = TracedResource(env, capacity=n_cheese, name='cheese clerks')
 
     checkouts = [
         TracedResource(env, capacity=1, name="checkout") for _ in range(n_checkouts)
     ]
 
     return {
-        "shopping carts": shoppingCarts,
+        "shopping carts": shopping_carts,
         "baskets": baskets,
-        "bread clerks": breadClerks,
-        "cheese clerks": cheeseClerks,
+        "bread clerks": bread_clerks,
+        "cheese clerks": cheese_clerks,
         "checkouts": checkouts
     }
 
 
-def checkoutProcess(customer, env):
+def checkout_process(customer, env):
     t_tot_scan = 0.
 
     # scan each item
@@ -260,7 +260,7 @@ def checkoutProcess(customer, env):
         print('{:.2f}: {} pays at checkout'.format(env.now, customer.ucid))
 
 
-def checkoutQueues(customer, env, checkouts):
+def checkout_queues(customer, env, checkouts):
     # access checkout queues to see which is the quickest
     queue_lengths = [
         len(ch.put_queue) + ch.count for ch in checkouts
@@ -270,12 +270,12 @@ def checkoutQueues(customer, env, checkouts):
     index, element = min(enumerate(queue_lengths), key=itemgetter(1))
 
     # enter the shortest queue
-    subprocess = env.process(checkoutProcess(customer, env))
-    reqBlock = env.process(checkouts[index].requestBlock(customer, subprocess))
-    yield reqBlock
+    subprocess = env.process(checkout_process(customer, env))
+    req_block = env.process(checkouts[index].request_block(customer, subprocess))
+    yield req_block
 
 
-def breadProcess(customer, env):
+def bread_process(customer, env):
     t_bread = float(
         customer.rng.normal(customer.stochastics["bread_vars"][0], customer.stochastics["bread_vars"][1], 1))
     yield env.timeout(t_bread)
@@ -284,13 +284,13 @@ def breadProcess(customer, env):
         print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
 
 
-def breadQueue(customer, env, breadClerks):
-    subprocess = env.process(breadProcess(customer, env))
-    reqBlock = env.process(breadClerks.requestBlock(customer, subprocess))
-    yield reqBlock
+def bread_queue(customer, env, bread_clerks):
+    subprocess = env.process(bread_process(customer, env))
+    req_block = env.process(bread_clerks.request_block(customer, subprocess))
+    yield req_block
 
 
-def cheeseProcess(customer, env):
+def cheese_process(customer, env):
     t_cheese = float(
         customer.rng.normal(customer.stochastics["cheese_vars"][0], customer.stochastics["cheese_vars"][1], 1))
     yield env.timeout(t_cheese)
@@ -299,7 +299,7 @@ def cheeseProcess(customer, env):
         print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
 
 
-def cheeseQueue(customer, env, cheeseClerks):
-    subprocess = env.process(cheeseProcess(customer, env))
-    reqBlock = env.process(cheeseClerks.requestBlock(customer, subprocess))
-    yield reqBlock
+def cheese_queue(customer, env, cheese_clerks):
+    subprocess = env.process(cheese_process(customer, env))
+    req_block = env.process(cheese_clerks.request_block(customer, subprocess))
+    yield req_block

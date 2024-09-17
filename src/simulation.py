@@ -1,5 +1,5 @@
 import simpy
-from src.TracedResource import createResources
+from src.TracedResource import create_resources
 from src.customer_factory import CustomerFactory
 import pathlib
 import os
@@ -34,11 +34,11 @@ class Simulation:
             env = simpy.Environment()
 
             # initialize shared resources
-            resources = createResources(env, n_shoppingcars=self.config["resource quantities"]["shopping carts"],
-                                        n_baskets=self.config["resource quantities"]["baskets"],
-                                        n_bread=self.config["resource quantities"]["bread clerks"],
-                                        n_cheese=self.config["resource quantities"]["cheese clerks"],
-                                        n_checkouts=self.config["resource quantities"]["checkouts"])
+            resources = create_resources(env, n_shopping_carts=self.config["resource quantities"]["shopping carts"],
+                                         n_baskets=self.config["resource quantities"]["baskets"],
+                                         n_bread=self.config["resource quantities"]["bread clerks"],
+                                         n_cheese=self.config["resource quantities"]["cheese clerks"],
+                                         n_checkouts=self.config["resource quantities"]["checkouts"])
 
             # initialize the customer factory, SEED EQUAL TO THE RUN INDEX
             customer_factory = CustomerFactory(env, self.config, resources, seed=run)
@@ -58,11 +58,11 @@ class Simulation:
             if isinstance(self.resourceLog[run][resource],
                           list):  # if it's a list (meaning we're dealing with checkouts)
                 for res in self.resourceLog[run][resource]:
-                    wait_time = res.waitTimeDictionary()
+                    wait_time = res.wait_time_dictionary()
                     numerator += sum([val for key, val in wait_time.items()])
                     denominator += len(wait_time)
             else:
-                wait_time = self.resourceLog[run][resource].waitTimeDictionary()
+                wait_time = self.resourceLog[run][resource].wait_time_dictionary()
                 numerator += sum([val for key, val in wait_time.items()])
                 denominator += len(wait_time)
         return numerator / denominator
@@ -74,11 +74,11 @@ class Simulation:
             if isinstance(self.resourceLog[run][resource],
                           list):  # if it's a list (meaning we're dealing with checkouts)
                 for res in self.resourceLog[run][resource]:
-                    use_time = res.useTimeDictionary()
+                    use_time = res.use_time_dictionary()
                     numerator += sum([val for key, val in use_time.items()])
                     denominator += len(use_time)
             else:
-                use_time = self.resourceLog[run][resource].useTimeDictionary()
+                use_time = self.resourceLog[run][resource].use_time_dictionary()
                 numerator += sum([val for key, val in use_time.items()])
                 denominator += len(use_time)
         return numerator / denominator

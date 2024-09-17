@@ -1,4 +1,4 @@
-from src.TracedResource import checkoutQueues, breadQueue, cheeseQueue
+from src.TracedResource import checkout_queues, bread_queue, cheese_queue
 
 # generic function for the other departments, likely will have to be changed for the next assignment
 def generic_department_function(customer, env, department_id):
@@ -24,9 +24,9 @@ def department_cd_function(customer, env, department_id):
 
     match department_id:
         case 'C':
-            queue = env.process(breadQueue(customer, env, customer.resources['bread clerks']))
+            queue = env.process(bread_queue(customer, env, customer.resources['bread clerks']))
         case 'D':
-            queue = env.process(cheeseQueue(customer, env, customer.resources['cheese clerks']))
+            queue = env.process(cheese_queue(customer, env, customer.resources['cheese clerks']))
 
     yield queue
 
@@ -38,7 +38,7 @@ def checkout_wrapper(customer, env):
 
     if customer.flags["print"]:
         print('{:.2f}: {} arrives at checkout'.format(env.now,customer.ucid))
-    queue = env.process(checkoutQueues(customer, env, customer.resources['checkouts']))
+    queue = env.process(checkout_queues(customer, env, customer.resources['checkouts']))
     yield queue
 
     if customer.flags["print"]:

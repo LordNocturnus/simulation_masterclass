@@ -1,4 +1,4 @@
-from src.TracedResource import checkoutProcess, breadQueue, cheeseQueue
+from src.TracedResource import checkout_process, bread_queue, cheese_queue
 from src.department import function_dict, checkout_wrapper, generic_department_function
 import numpy.random as npr
 
@@ -61,5 +61,5 @@ class Customer:
 
         # run subprocess while requesting a container
         subprocess = self.env.process(self.DepartmentSubprocess())
-        processBlock = self.env.process(container.requestBlock(self, subprocess))
+        processBlock = self.env.process(container.request_block(self, subprocess))
         yield processBlock
