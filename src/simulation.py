@@ -102,6 +102,7 @@ class Simulation():
 
     def plot_availability(self, resource):  # for checkouts, take the first one
         fig, ax = plt.subplots()
+        t_max = 0
 
         for run in range(self.runs):
 
@@ -109,6 +110,8 @@ class Simulation():
                 availability, time = self.resourceLog[run][resource][0].availability()
             else:
                 availability, time = self.resourceLog[run][resource].availability()
+
+            t_max = max(t_max, max(time))
 
             ax.step(time, np.append(availability, availability[-1])[:-1],
                     where='post', label="run {}".format(run))  # piecewise constant
