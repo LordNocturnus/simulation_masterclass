@@ -45,7 +45,7 @@ class CustomerFactory:
     def run(self):
         ucid = 0
         for k, v in enumerate(self.config["arrivals"][:-1]):
-            count = int(np.round(self.rng.normal(v[1], v[2] / 2)))
+            count = self.rng.poisson(v[1])
             for _ in range(count):
                 self.customers.append(self.create_customer(k, ucid))
                 ucid +=1
