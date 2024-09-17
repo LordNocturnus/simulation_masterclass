@@ -66,21 +66,6 @@ class CustomerFactory:
         return Customer(self.env, self.config["stochastics"], self.departments, self.resources, self.config["flags"],
                         shopping_list, basket, route, t, ucid, seed)
 
-    def average_wait_time(self):
-        n_customers = len(self.customers)
-        return {
-            "baskets" : sum([customer.wait_times['entrance'] for customer in self.customers if customer.basket]) / n_customers,
-            "shopping carts": sum(
-                [customer.wait_times['entrance'] for customer in self.customers if not customer.basket]) / n_customers,
-            "bread": sum(
-                [customer.wait_times['bread'] for customer in self.customers]) / n_customers,
-            "cheese": sum(
-                [customer.wait_times['cheese'] for customer in self.customers]) / n_customers,
-            "checkout": sum(
-                [customer.wait_times['checkout'] for customer in self.customers]) / n_customers,
-
-        }
-
     def wait_times_containers(self):
         """ time customers are waiting for containers"""
         return np.asarray([c.wait_time_container for c in self.customers])

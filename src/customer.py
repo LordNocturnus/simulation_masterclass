@@ -1,10 +1,7 @@
-from src.TracedResource import checkout_process, bread_queue, cheese_queue
-from src.department import function_dict, checkout_wrapper, generic_department_function
 from scipy.stats import truncnorm
 from operator import itemgetter
 import numpy.random as npr
 import numpy as np
-
 
 
 class Customer:

@@ -127,38 +127,6 @@ class Simulation:
         """ time customers are in a department getting items (does not include waiting time)"""
         return np.concatenate([c.active_times_department(department) for c in self.customerLog])
 
-    def average_wait_time(self, resource):  # for checkouts, takes the average over all four
-        numerator = 0
-        denominator = 0
-        for run in range(self.runs):
-            if isinstance(self.resourceLog[run][resource],
-                          list):  # if it's a list (meaning we're dealing with checkouts)
-                for res in self.resourceLog[run][resource]:
-                    wait_time = res.wait_time_dictionary()
-                    numerator += sum([val for key, val in wait_time.items()])
-                    denominator += len(wait_time)
-            else:
-                wait_time = self.resourceLog[run][resource].wait_time_dictionary()
-                numerator += sum([val for key, val in wait_time.items()])
-                denominator += len(wait_time)
-        return numerator / denominator
-
-    def average_use_time(self, resource):  # for checkouts, takes the average over all four
-        numerator = 0
-        denominator = 0
-        for run in range(self.runs):
-            if isinstance(self.resourceLog[run][resource],
-                          list):  # if it's a list (meaning we're dealing with checkouts)
-                for res in self.resourceLog[run][resource]:
-                    use_time = res.use_time_dictionary()
-                    numerator += sum([val for key, val in use_time.items()])
-                    denominator += len(use_time)
-            else:
-                use_time = self.resourceLog[run][resource].use_time_dictionary()
-                numerator += sum([val for key, val in use_time.items()])
-                denominator += len(use_time)
-        return numerator / denominator
-
     def average_queue_length(self, resource):
         numerator = 0
         denominator = 0
