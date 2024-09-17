@@ -126,7 +126,7 @@ class Simulation():
         ax.axhspan(ymin=ymin, ymax=0, facecolor='r', alpha=0.25)
         ax.axhspan(ymin=0, ymax=ymax, facecolor='g', alpha=0.25)
         ax.set_ylim(ymin, ymax)
-        ax.set_xlim(0, max(time))
+        ax.set_xlim(0, t_max)
 
         ax.grid(True)
         plt.show()
