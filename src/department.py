@@ -1,4 +1,17 @@
-from src.TracedResource import checkout_queues, bread_queue, cheese_queue
+from src.TracedResource import checkout_queues, bread_queue, cheese_queue, TracedResource
+
+
+class Department:
+
+    def __init__(self, name, env, queue=None):
+        self.name = name
+        self.env = env
+
+        if queue is not None:
+            self.queue = TracedResource(env, capacity=queue, name=name)
+        else:
+            self.queue = None
+
 
 # generic function for the other departments, likely will have to be changed for the next assignment
 def generic_department_function(customer, env, department_id):
