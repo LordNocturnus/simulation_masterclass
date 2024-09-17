@@ -53,6 +53,7 @@ class TracedResource(Resource):
             }
         )
         yield req  # wait to be served
+
         customer.serve_times[self.name] = self.env.now
 
         # queueLog queue exit

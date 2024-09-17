@@ -22,6 +22,7 @@ ms.run()
 
 ms.printResourceUse()
 ms.printThroughputData()
+ms.plotUseHistogram("bread clerks")
 ms.plotThroughputHistogram()
 ms.plotAvailability("shopping carts")
 

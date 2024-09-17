@@ -6,6 +6,7 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
 class Simulation():
     """
     Simulation class, used to run the supermarket model
@@ -48,8 +49,6 @@ class Simulation():
             self.resourceLog[run] = resources
             self.customerLog[run] = customer_factory.customers
 
-            del env, resources, customer_factory
-
     def waitTimeData(self, resource):  # for checkouts, takes the average over all four
         waitTime = np.array([])
         arrivalTime = np.array([])
@@ -86,8 +85,7 @@ class Simulation():
         numerator = 0
         denominator = 0
         for run in range(self.N_RUNS):
-            if isinstance(self.resourceLog[run][resource],
-                          list):  # if it's a list (meaning we're dealing with checkouts)
+            if isinstance(self.resourceLog[run][resource], list):  # if it's a list (meaning we're dealing with checkouts)
                 for res in self.resourceLog[run][resource]:
                     queueLength, time = res.postprocess_log(res.queueLog)
                     numerator += sum(queueLength[:-1] * (time[1:] - time[:-1]))
@@ -175,13 +173,26 @@ class Simulation():
         fig, ax = plt.subplots()
         tt, at = self.customerThroughputData()
 
-        ax.hist(tt)
+        ax.hist(tt, bins=50)
 
         ax.set_xlabel("no. of customers [s]")
         ax.set_ylabel("customer throughput time [s]")
 
         ax.grid(True)
         plt.show()
+
+    def plotUseHistogram(self, resource):
+        fig, ax = plt.subplots()
+        tt, at = self.useTimeData(resource)
+
+        ax.hist(tt, bins=50)
+
+        ax.set_xlabel("no. of customers [s]")
+        ax.set_ylabel("{} use time [s]".format(resource))
+
+        ax.grid(True)
+        plt.show()
+
 
     def plotWaitTime(self, resource):
         pass
