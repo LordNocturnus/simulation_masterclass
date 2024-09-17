@@ -19,91 +19,93 @@ class TracedResource(Resource):
         self.logs = [self.queueLog, self.capacityLog]
         self.ucids = set({})
 
-    def requestBlock(self, customer, subprocess):
-        """
-        wrapper around the .request() method, including the logging of relevant events
-        function essentially replaces the "with self.request() as req:" block
-        WARNING: implement with caution, as the request block has to be:
-         1) wrapped in the env.process() function
-         2) yielded when executing
-         see implementation in the checkoutQueue, breadQueue, and cheeseQueue for reference
-        :param customer: a Customer class instance
-        :param subprocess: any env.process
-        """
-        self.ucids.add(customer.ucid)  # add ucid to set of users of this resource
-
-        req = self.request()
-
-        if customer.flags["print"]:
-            print('{:.2f}: {} enters a {} queue'.format(self.env.now, customer.ucid, self.name))
-
-        customer.arrival_times[self.name] = self.env.now
-        self.queueLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.arrival_times[self.name],
-                "value": 1
-            }
-        )
-        self.demandLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.arrival_times[self.name],
-                "value": 1
-            }
-        )
-        yield req  # wait to be served
-
-        customer.serve_times[self.name] = self.env.now
-
-        # queueLog queue exit
-        self.queueLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.serve_times[self.name],
-                "value": -1
-            }
-        )
-        customer.wait_times[self.name] = customer.serve_times[self.name] - customer.arrival_times[self.name]
-
-        if customer.flags["print"]:
-            print('{:.2f}: {} is served at {}'.format(self.env.now, customer.ucid, self.name))
-
-
-
-        # log use
-        self.capacityLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.serve_times[self.name],
-                "value": 1
-            }
-        )
-
-        yield subprocess
-
-        customer.release_times[self.name] = self.env.now
-        self.release(req)
-
-
-        # log end of use
-        self.capacityLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.release_times[self.name],
-                "value": -1
-            }
-        )
-        self.demandLog.append(
-            {
-                "ucid": customer.ucid,
-                "time": customer.release_times[self.name],
-                "value":-1
-            }
-        )
-
-        customer.use_times[self.name] = customer.release_times[self.name] - customer.serve_times[self.name]
-
+    # def requestBlock(self, customer, subprocess):
+    #     """
+    #     wrapper around the .request() method, including the logging of relevant events
+    #     function essentially replaces the "with self.request() as req:" block
+    #     WARNING: implement with caution, as the request block has to be:
+    #      1) wrapped in the env.process() function
+    #      2) yielded when executing
+    #      see implementation in the checkoutQueue, breadQueue, and cheeseQueue for reference
+    #     :param customer: a Customer class instance
+    #     :param subprocess: any env.process
+    #     """
+    #     self.ucids.add(customer.ucid)  # add ucid to set of users of this resource
+    #
+    #     customer.requests[self.name] = self.request()
+    #
+    #     if customer.flags["print"]:
+    #         print('{:.2f}: {} enters a {} queue'.format(self.env.now, customer.ucid, self.name))
+    #
+    #     customer.arrival_times[self.name] = self.env.now
+    #     self.queueLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.arrival_times[self.name],
+    #             "value": 1
+    #         }
+    #     )
+    #     self.demandLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.arrival_times[self.name],
+    #             "value": 1
+    #         }
+    #     )
+    #     yield customer.requests[self.name]  # wait to be served
+    #
+    #     customer.serve_times[self.name] = self.env.now
+    #
+    #     # queueLog queue exit
+    #     self.queueLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.serve_times[self.name],
+    #             "value": -1
+    #         }
+    #     )
+    #     customer.wait_times[self.name] = customer.serve_times[self.name] - customer.arrival_times[self.name]
+    #
+    #     if customer.flags["print"]:
+    #         print('{:.2f}: {} is served at {}'.format(self.env.now, customer.ucid, self.name))
+    #
+    #
+    #
+    #     # log use
+    #     self.capacityLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.serve_times[self.name],
+    #             "value": 1
+    #         }
+    #     )
+    #
+    #     yield subprocess
+    #
+    #     if customer.flags["print"]:
+    #         print('{:.2f}: {} finishes action at {}'.format(self.env.now, customer.ucid, self.name))
+    #
+    #     customer.release_times[self.name] = self.env.now
+    #     self.release(customer.requests[self.name])
+    #
+    #
+    #     # log end of use
+    #     self.capacityLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.release_times[self.name],
+    #             "value": -1
+    #         }
+    #     )
+    #     self.demandLog.append(
+    #         {
+    #             "ucid": customer.ucid,
+    #             "time": customer.release_times[self.name],
+    #             "value":-1
+    #         }
+    #     )
+    #
+    #     customer.use_times[self.name] = customer.release_times[self.name] - customer.serve_times[self.name]
 
     def postprocess_log(self, log):
         time = np.array([el["time"] for el in log])
@@ -257,9 +259,8 @@ def checkoutQueues(customer, env, checkouts):
     # find the index of the shortest queue
     index, element = min(enumerate(queue_lengths), key=itemgetter(1))
 
-    # enter the shortest queue
-    subprocess = env.process(checkoutProcess(customer, env))
-    reqBlock = env.process(checkouts[index].requestBlock(customer, subprocess))
+    # run checkout while queuing up
+    reqBlock = env.process(customer.resourceRequestBlock(checkouts[index], checkoutProcess, customer, env))
     yield reqBlock
 
 
@@ -268,23 +269,16 @@ def breadProcess(customer, env):
         customer.rng.normal(customer.stochastics["bread_vars"][0], customer.stochastics["bread_vars"][1], 1))
     yield env.timeout(t_bread)
 
-    if customer.flags["print"]:
-        print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
-
 def breadQueue(customer, env, breadClerks):
 
-    subprocess = env.process(breadProcess(customer, env))
-    reqBlock = env.process(breadClerks.requestBlock(customer, subprocess))
+    reqBlock = env.process(customer.resourceRequestBlock(breadClerks, breadProcess, customer, env))
     yield reqBlock
 
 def cheeseProcess(customer, env):
     t_cheese = float(customer.rng.normal(customer.stochastics["cheese_vars"][0], customer.stochastics["cheese_vars"][1], 1))
     yield env.timeout(t_cheese)
 
-    if customer.flags["print"]:
-        print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
-
 def cheeseQueue(customer, env, cheeseClerks):
-    subprocess = env.process(cheeseProcess(customer, env))
-    reqBlock = env.process(cheeseClerks.requestBlock(customer, subprocess))
+
+    reqBlock = env.process(customer.resourceRequestBlock(cheeseClerks, cheeseProcess, customer, env))
     yield reqBlock

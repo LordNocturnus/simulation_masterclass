@@ -42,7 +42,7 @@ def checkout_wrapper(customer, env):
     yield queue
 
     if customer.flags["print"]:
-        print('{:.2f}: {} leaves the store'.format(env.now,customer.ucid, env.now))
+        print('{:.2f}: {} leaves checkout'.format(env.now,customer.ucid, env.now))
 
 
 
