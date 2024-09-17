@@ -8,7 +8,7 @@ from simpy.resources.resource import Request, Release
 
 
 class TracedResource(Resource):
-    
+
     def __init__(self, env, capacity, name="Unnamed Resource"):
         super().__init__(env, capacity)
         self.env = env
@@ -80,8 +80,6 @@ class TracedResource(Resource):
         if customer.flags["print"]:
             print('{:.2f}: {} is served at {}'.format(self.env.now, customer.ucid, self.name))
 
-
-
         # log use
         self.capacityLog.append(
             {
@@ -109,7 +107,7 @@ class TracedResource(Resource):
             {
                 "ucid": customer.ucid,
                 "time": t2,
-                "value":-1
+                "value": -1
             }
         )
         customer.use_times[self.name] = t2 - t1
@@ -152,7 +150,7 @@ class TracedResource(Resource):
         ax.grid(True)
         plt.show()
 
-    def getWaitTime(self, ucid : int):
+    def getWaitTime(self, ucid: int):
         timestamps = [logEntry["time"] for logEntry in self.queueLog if logEntry["ucid"] == ucid]
         if timestamps:
             return timestamps[-1] - timestamps[0]
@@ -186,6 +184,7 @@ class TracedResource(Resource):
         dict = self.useTimeDictionary()
         ave = sum([val for key, val in dict.items()]) / len(dict)
         return ave
+
     def waitTimeHistogram(self):
 
         fig, ax = plt.subplots()
@@ -214,22 +213,23 @@ class TracedResource(Resource):
         ax.grid(True)
         plt.show()
 
-def createResources(env, n_shoppingcars=45, n_baskets = 300, n_bread=4, n_cheese=3, n_checkouts=4):
+
+def createResources(env, n_shoppingcars=45, n_baskets=300, n_bread=4, n_cheese=3, n_checkouts=4):
     shoppingCarts = TracedResource(env, capacity=n_shoppingcars, name="shopping carts")
     baskets = TracedResource(env, capacity=n_baskets, name="baskets")
     breadClerks = TracedResource(env, capacity=n_bread, name='bread clerks')
-    cheeseClerks = TracedResource(env, capacity=n_cheese, name ='cheese clerks')
+    cheeseClerks = TracedResource(env, capacity=n_cheese, name='cheese clerks')
 
     checkouts = [
-        TracedResource(env, capacity=1, name = "checkout") for _ in range(n_checkouts)
+        TracedResource(env, capacity=1, name="checkout") for _ in range(n_checkouts)
     ]
 
     return {
-        "shopping carts" : shoppingCarts,
-        "baskets" : baskets,
-        "bread clerks" : breadClerks,
-        "cheese clerks" : cheeseClerks,
-        "checkouts" : checkouts
+        "shopping carts": shoppingCarts,
+        "baskets": baskets,
+        "bread clerks": breadClerks,
+        "cheese clerks": cheeseClerks,
+        "checkouts": checkouts
     }
 
 
@@ -254,9 +254,9 @@ def checkoutProcess(customer, env):
     if customer.flags["print"]:
         print('{:.2f}: {} pays at checkout'.format(env.now, customer.ucid))
 
-def checkoutQueues(customer, env, checkouts):
 
-    #access checkout queues to see which is the quickest
+def checkoutQueues(customer, env, checkouts):
+    # access checkout queues to see which is the quickest
     queue_lengths = [
         len(ch.put_queue) + ch.count for ch in checkouts
     ]
@@ -278,18 +278,21 @@ def breadProcess(customer, env):
     if customer.flags["print"]:
         print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
 
-def breadQueue(customer, env, breadClerks):
 
+def breadQueue(customer, env, breadClerks):
     subprocess = env.process(breadProcess(customer, env))
     reqBlock = env.process(breadClerks.requestBlock(customer, subprocess))
     yield reqBlock
 
+
 def cheeseProcess(customer, env):
-    t_cheese = float(customer.rng.normal(customer.stochastics["cheese_vars"][0], customer.stochastics["cheese_vars"][1], 1))
+    t_cheese = float(
+        customer.rng.normal(customer.stochastics["cheese_vars"][0], customer.stochastics["cheese_vars"][1], 1))
     yield env.timeout(t_cheese)
 
     if customer.flags["print"]:
         print('{:.2f}: {} is served at department C'.format(env.now, customer.ucid))
+
 
 def cheeseQueue(customer, env, cheeseClerks):
     subprocess = env.process(cheeseProcess(customer, env))
