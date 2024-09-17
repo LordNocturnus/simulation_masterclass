@@ -40,5 +40,12 @@
       "print" : true,
       "save" : true
     }
+  },
+  "resource quantities": {
+    "shopping carts" : 45,
+    "baskets" : 300,
+    "bread clerks" : 4,
+    "cheese clerks" : 3,
+    "checkouts" : 4
   }
 }

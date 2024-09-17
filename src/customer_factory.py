@@ -15,9 +15,12 @@ class CustomerFactory:
         self.rng = npr.default_rng(seed)
         self.resources = resources
 
-        with open(customer_config) as config:
-            self.config = json.load(config)["Customer"]
-        # self.config["stochastics"]["search_bounds"] = tuple(self.config["search_bounds"])
+        # customer_config can be either a path or a dictionary
+        if isinstance(customer_config, dict):
+            self.config = customer_config["Customer"] # only load the customer  section
+        else:
+            with open(customer_config) as config: # if it's a path, read the file
+                self.config = json.load(config)["Customer"]
 
         self.departments = {}
         for dep in self.config["items"].keys():

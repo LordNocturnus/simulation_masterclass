@@ -7,25 +7,45 @@ import matplotlib
 from simpy.resources.resource import Request, Release
 
 
-class CustomResource(Resource):
-    def __init__(self, env, capacity):
+class TracedResource(Resource):
+    
+    def __init__(self, env, capacity, name="Unnamed Resource"):
         Resource.__init__(self, env, capacity)
         self.env = env
+        self.name = name
         self.queueLog = []
         self.capacityLog = []
+        self.demandLog = []
         self.logs = [self.queueLog, self.capacityLog]
         self.ucids = set({})
 
     def requestBlock(self, customer, subprocess):
+        """
+        wrapper around the .request() method, including the logging of relevant events
+        function essentially replaces the "with self.request() as req:" block
+        WARNING: implement with caution, as the request block has to be:
+         1) wrapped in the env.process() function
+         2) yielded when executing
+         see implementation in the checkoutQueue, breadQueue, and cheeseQueue for reference
+        :param customer: a Customer class instance
+        :param subprocess: any env.process
+        """
         self.ucids.add(customer.ucid)  # add ucid to set of users of this resource
 
         req = self.request()
 
         if customer.flags["print"]:
-            print('{:.2f}: {} enters a queue'.format(self.env.now, customer.ucid))
+            print('{:.2f}: {} enters a {} queue'.format(self.env.now, customer.ucid, self.name))
 
         t0 = self.env.now
         self.queueLog.append(
+            {
+                "ucid": customer.ucid,
+                "time": t0,
+                "value": 1
+            }
+        )
+        self.demandLog.append(
             {
                 "ucid": customer.ucid,
                 "time": t0,
@@ -42,9 +62,10 @@ class CustomResource(Resource):
                 "value": -1
             }
         )
+        customer.wait_times[self.name] = t1 - t0
 
         if customer.flags["print"]:
-            print('{:.2f}: {} is served'.format(self.env.now, customer.ucid))
+            print('{:.2f}: {} is served at {}'.format(self.env.now, customer.ucid, self.name))
 
 
 
@@ -60,14 +81,25 @@ class CustomResource(Resource):
         yield subprocess
 
         self.release(req)
+
+        t2 = self.env.now
+
         # log end of use
         self.capacityLog.append(
             {
                 "ucid": customer.ucid,
-                "time": self.env.now,
+                "time": t2,
                 "value": -1
             }
         )
+        self.demandLog.append(
+            {
+                "ucid": customer.ucid,
+                "time": t2,
+                "value":-1
+            }
+        )
+        customer.use_times[self.name] = t2 - t1
 
 
     def postprocess_log(self, log):
@@ -82,25 +114,10 @@ class CustomResource(Resource):
         return cs, time
 
     def availability(self):
-        currentlyUsed, tUse = self.postprocess_log(self.capacityLog)
-        queueLength, tQueue = self.postprocess_log(self.queueLog)
+        demand, time = self.postprocess_log(self.demandLog)
+        available = self.capacity - demand
 
-        currentlyAvailable = self.capacity - currentlyUsed
-        overflow = -queueLength
-
-        # 1. Combine the time points
-        t_combined = np.union1d(tUse, tQueue)
-
-        # 2. Interpolate x1 and x2 at the combined time points
-        # Use 'previous' values (piecewise constant)
-        x1_interp = currentlyAvailable[np.searchsorted(tUse, t_combined, side='right') - 1]
-        x2_interp = overflow[np.searchsorted(tQueue, t_combined, side='right') - 1]
-
-        # 3. Compute the sum of x1 and x2 at each point in time
-        x_sum = x1_interp + x2_interp
-
-        return x_sum, t_combined
-
+        return available, time
 
 
     def plotAvailability(self):
@@ -112,8 +129,15 @@ class CustomResource(Resource):
         ax.axhline(0, color='k', linestyle='dashed')
 
         ax.set_xlabel("time [s]")
-        ax.set_ylabel("resource count")
-        ax.legend()
+        ax.set_ylabel("{} availability".format(self.name))
+        # ax.legend()
+
+        ymin, ymax = ax.get_ylim()
+        ax.axhspan(ymin=ymin, ymax=0, facecolor='r', alpha=0.25)
+        ax.axhspan(ymin=0, ymax=ymax, facecolor='g', alpha=0.25)
+        ax.set_ylim(ymin, ymax)
+        ax.set_xlim(0, max(time))
+
 
         ax.grid(True)
         plt.show()
@@ -159,7 +183,7 @@ class CustomResource(Resource):
 
         ax.hist(data.values(), bins=25)
 
-        ax.set_ylabel("no. of customers")
+        ax.set_ylabel("no. of {} users".format(self.name))
         ax.set_xlabel("wait time [s]")
         ax.legend()
 
@@ -173,29 +197,23 @@ class CustomResource(Resource):
 
         ax.hist(data.values(), bins=25)
 
-        ax.set_ylabel("no. of customers")
+        ax.set_ylabel("no. of {} users".format(self.name))
         ax.set_xlabel("use time [s]")
         ax.legend()
 
         ax.grid(True)
         plt.show()
 
-
-
-
-        
-
 def createResources(env, n_shoppingcars=45, n_baskets = 300, n_bread=4, n_cheese=3, n_checkouts=4):
-    shoppingCarts = CustomResource(env, capacity=n_shoppingcars)
-    baskets = CustomResource(env, capacity=n_baskets)
-    breadClerks = CustomResource(env, capacity=n_bread)
-    cheeseClerks = CustomResource(env, capacity=n_cheese)
+    shoppingCarts = TracedResource(env, capacity=n_shoppingcars, name="shopping carts")
+    baskets = TracedResource(env, capacity=n_baskets, name="baskets")
+    breadClerks = TracedResource(env, capacity=n_bread, name='bread clerks')
+    cheeseClerks = TracedResource(env, capacity=n_cheese, name ='cheese clerks')
 
     checkouts = [
-        CustomResource(env, capacity=1) for _ in range(n_checkouts)
+        TracedResource(env, capacity=1, name = "checkout") for _ in range(n_checkouts)
     ]
 
-    # return shoppingCarts, baskets, breadClerks, cheeseClerks, checkouts
     return {
         "shopping carts" : shoppingCarts,
         "baskets" : baskets,

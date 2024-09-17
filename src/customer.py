@@ -16,12 +16,10 @@ class Customer:
         self.rng = npr.default_rng(seed)
         self.stochastics = stochastics
         self.flags = flags
-        # initialize wait times as 0.0
+        # initialize wait times and use times of resources
         self.wait_times = {
-            "entrance" : 0.0,
-            "bread" : 0.0,
-            "cheese" : 0.0,
-            "checkout" : 0.0
+        }
+        self.use_times = {
         }
 
         self.action = self.env.process(self.run())
