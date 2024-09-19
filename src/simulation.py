@@ -7,6 +7,7 @@ import numpy as np
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
 from src.department import Department
+from src.plotting import plot_average
 
 
 class Simulation:
@@ -65,6 +66,7 @@ class Simulation:
 
             # run simulation
             env.run()
+            print(f"finished run {run}")
 
             # store results
             self.resourceLog.append(resources)
@@ -172,8 +174,32 @@ class Simulation:
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(0, t_max)
 
-        ax.grid(True)
         plt.show()
+
+    def plot_basket_availability(self, confidence=True):
+        data = []
+
+        for run in range(self.runs):
+            availability, time = self.resourceLog[run]["baskets"].availability()
+            availability = np.insert(availability, 0, self.config["resource quantities"]["baskets"])
+            time = np.insert(time, 0, 0)
+            data.append(np.asarray([time, availability]))
+
+        plot_average(data, "Time [s]", "Available Baskets [-]",
+                     "Average Baskets available over time", confidence)
+
+    def plot_cart_availability(self, confidence=True):
+        data = []
+
+        for run in range(self.runs):
+            availability, time = self.resourceLog[run]["shopping_carts"].availability()
+            availability = np.insert(availability, 0, self.config["resource quantities"]["shopping carts"])
+            time = np.insert(time, 0, 0)
+            data.append(np.asarray([time, availability]))
+
+        plot_average(data, "Time [s]", "Available Shopping Carts [-]",
+                     "Average Shopping Carts available over time", confidence)
+
 
     def print_basket_use(self):
         aql = self.average_queue_length("baskets")
