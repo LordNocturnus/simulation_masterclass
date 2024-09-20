@@ -188,7 +188,6 @@ class Simulation:
 
         plt.clf()
 
-
     def plot_store_time_vs_start_time(self, save=False):
         fig, ax = plt.subplots()
         store_time = self.store_times()
@@ -210,7 +209,6 @@ class Simulation:
 
         plt.clf()
 
-
     def plot_store_time_histogram(self, save=False, n_bins=50):
         fig, ax = plt.subplots()
         store_time = self.store_times()
@@ -224,8 +222,6 @@ class Simulation:
         ax.axvline(mu, color='k', label='$\mu \pm 2\sigma$')
         ax.axvline(mu-2*sigma, color='k', linestyle='dashed')
         ax.axvline(mu+2*sigma, color='k', linestyle='dashed')
-
-
 
         ax.set_ylabel("% of customers")
         ax.set_xlabel("customer throughput time [s]")
@@ -262,15 +258,15 @@ class Simulation:
 
     def print_use(self, key):
         aql = self.average_queue_length(key)
-        awt = np.average(self.wait_times(key))
-        aut = np.average(self.use_times(key))
-        att = np.average(self.total_times(key))
+        wt = self.wait_times(key)
+        ut = self.use_times(key)
+        tt = self.total_times(key)
         print('---------------------------------')
         print(f"use data for {key}")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
-        print("average total time [s]: {:.2f}".format(att))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
+        print("total time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(tt.min(), tt.mean(), tt.max()))
         print('---------------------------------')
 
     def print_all_resource_uses(self):
