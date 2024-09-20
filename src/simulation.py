@@ -1,8 +1,11 @@
+import os
+
 import simpy
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from scipy.signal import savgol_filter
 
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
@@ -15,7 +18,7 @@ class Simulation:
     the class stores simulation results for postprocessing
     """
 
-    def __init__(self, config, runs=1):
+    def __init__(self, config, runs=1, overwrite_print = None):
         self.runs = runs
 
         if isinstance(config, dict):
@@ -23,6 +26,11 @@ class Simulation:
         else:
             with open(config) as config:  # if it's a path, read the file
                 self.config = json.load(config)
+
+        if overwrite_print is not None:
+            if isinstance(overwrite_print, bool):
+                self.config["Customer"]["flags"]["print"] = overwrite_print
+
 
         self.resourceLog = []
         self.customerLog = []
@@ -47,7 +55,7 @@ class Simulation:
 
             # initialize shared resources
             resources = dict()
-            resources["shopping_carts"] = TracedResource(env,
+            resources["shopping carts"] = TracedResource(env,
                                                          capacity=self.config["resource quantities"]["shopping carts"],
                                                          name="Shopping carts")
             resources["baskets"] = TracedResource(env, capacity=self.config["resource quantities"]["baskets"],
@@ -127,6 +135,13 @@ class Simulation:
         """ time customers are in a department getting items (does not include waiting time)"""
         return np.concatenate([c.active_times_department(department) for c in self.customerLog])
 
+    def store_times(self):
+        return np.concatenate([c.store_times for c in self.customerLog])
+
+    def start_times(self):
+        return np.concatenate([c.start_times for c in self.customerLog])
+
+
     def average_queue_length(self, resource):
         numerator = 0
         denominator = 0
@@ -151,6 +166,7 @@ class Simulation:
 
         for run in range(self.runs):
 
+            # TODO: figure out how to implement checkouts
             if isinstance(self.resourceLog[run][resource], list):
                 availability, time = self.resourceLog[run][resource][0].availability()
             else:
@@ -175,14 +191,13 @@ class Simulation:
 
         # Convert list to numpy array and compute the average along the 0th axis
         interpolated_arrays = np.array(interpolated_arrays)
-        averaged_data = np.mean(interpolated_arrays, axis=0)
 
         return interpolated_arrays, common_time
 
-    def plot_availability(self, resource, save=False):  # for checkouts, take the first one
+    def plot_availability(self, resource, save=False, num_points=1000):  # for checkouts, take the first one
         fig, ax = plt.subplots()
 
-        interpolated_availability, time = self.__interporale_availability_to_common_time(resource)
+        interpolated_availability, time = self.__interporale_availability_to_common_time(resource, num_points=num_points)
 
         for run in range(self.runs):
             ax.step(time, np.append(interpolated_availability[run, :], interpolated_availability[run, :][-1])[:-1],
@@ -191,10 +206,9 @@ class Simulation:
                     alpha=0.5,
                     linewidth=0.8
                     )
-                    # label="run {}".format(run))  # piecewise constant
 
-        average_availability = interpolated_availability.mean(axis=0)
-        std_availability = interpolated_availability.std(axis=0)
+        average_availability = savgol_filter(interpolated_availability.mean(axis=0), window_length=int(num_points/12), polyorder=2)
+        std_availability = savgol_filter(interpolated_availability.std(axis=0), window_length=int(num_points/12), polyorder=2)
 
         # average +- 95% interval
         # TODO: generalize the confidence interval
@@ -217,69 +231,122 @@ class Simulation:
 
         ax.grid(True)
         if save:
-            plt.savefig("/plots/{}_avaiability.svg".format(resource))
+            plt.savefig("{}/plots/{}_availability.svg".format(os.getcwd(), resource))
         else:
             plt.show()
 
+        plt.clf()
+
+
+    def plot_store_time_vs_start_time(self, save=False):
+        fig, ax = plt.subplots()
+        store_time = self.store_times()
+        start_time = self.start_times()
+
+        ax.scatter(start_time, store_time, marker='x')
+        ax.axhline(store_time.mean(), color='k', linestyle='dashed')
+
+        ax.set_xlabel("customer arrival time [s]")
+        ax.set_ylabel("customer throughput time [s]")
+
+        ax.set_xlim(0, max(start_time))
+
+        ax.grid(True)
+        if save:
+            plt.savefig("{}/plots/store_time_vs_start_time.svg".format(os.getcwd()))
+        else:
+            plt.show()
+
+        plt.clf()
+
+
+    def plot_store_time_histogram(self, save=False, n_bins=50):
+        fig, ax = plt.subplots()
+        store_time = self.store_times()
+
+        ax.hist(store_time, bins=n_bins)
+
+        mu = store_time.mean()
+        sigma = store_time.std()
+
+        # TODO: generalize confidence
+        ax.axvline(mu, color='k', label='$\mu \pm 2\sigma$')
+        ax.axvline(mu-2*sigma, color='k', linestyle='dashed')
+        ax.axvline(mu+2*sigma, color='k', linestyle='dashed')
+
+
+
+        ax.set_ylabel("% of customers")
+        ax.set_xlabel("customer throughput time [s]")
+        ax.legend()
+
+        ax.grid(True)
+        if save:
+            plt.savefig("{}/plots/store_time_histogram.svg".format(os.getcwd()))
+        else:
+            plt.show()
+
+        plt.clf()
+
     def print_basket_use(self):
         aql = self.average_queue_length("baskets")
-        awt = np.average(self.wait_times_baskets)
-        aut = np.average(self.use_times_baskets)
+        wt = self.wait_times_baskets
+        ut = self.use_times_baskets
         print('---------------------------------')
-        print("use data for Baskets")
+        print("use data for baskets")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
         print('---------------------------------')
 
     def print_cart_use(self):
-        aql = self.average_queue_length("shopping_carts")
-        awt = np.average(self.wait_times_carts)
-        aut = np.average(self.use_times_carts)
+        aql = self.average_queue_length("shopping carts")
+        wt = self.wait_times_carts
+        ut = self.use_times_carts
         print('---------------------------------')
-        print("use data for Carts")
+        print("use data for shopping carts")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
         print('---------------------------------')
 
     def print_checkout_use(self):
         aql = self.average_queue_length("checkouts")
-        awt = np.average(self.wait_times_checkout)
-        aut = np.average(self.use_times_checkout)
-        aat = np.average(self.active_times_checkout)
+        wt = self.wait_times_checkout
+        ut = self.use_times_checkout
+        at = self.active_times_checkout
         print('---------------------------------')
-        print("use data for Checkouts")
+        print("use data for checkouts")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
-        print("average active time [s]: {:.2f}".format(aat))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
+        print("active time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(at.min(), at.mean(), at.max()))
         print('---------------------------------')
 
     def print_cheese_use(self):
-        aql = self.average_queue_length("bread")
-        awt = np.average(self.wait_times_department("C"))
-        aut = np.average(self.use_times_department("C"))
-        aat = np.average(self.active_times_department("C"))
+        aql = self.average_queue_length("cheese")
+        wt = self.wait_times_department("D")
+        ut = self.use_times_department("D")
+        at = self.active_times_department("D")
         print('---------------------------------')
-        print("use data for Bread")
+        print("use data for cheese")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
-        print("average active time [s]: {:.2f}".format(aat))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
+        print("active time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(at.min(), at.mean(), at.max()))
         print('---------------------------------')
 
     def print_bread_use(self):
-        aql = self.average_queue_length("cheese")
-        awt = np.average(self.wait_times_department("D"))
-        aut = np.average(self.use_times_department("D"))
-        aat = np.average(self.active_times_department("D"))
+        aql = self.average_queue_length("bread")
+        wt = self.wait_times_department("C")
+        ut = self.use_times_department("C")
+        at = self.active_times_department("C")
         print('---------------------------------')
-        print("use data for Cheese")
+        print("use data for bread")
         print("average queue length: {:.2f}".format(aql))
-        print("average wait time [s]: {:.2f}".format(awt))
-        print("average use time [s]: {:.2f}".format(aut))
-        print("average active time [s]: {:.2f}".format(aat))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
+        print("active time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(at.min(), at.mean(), at.max()))
         print('---------------------------------')
 
     def print_all_resource_uses(self):
@@ -288,3 +355,15 @@ class Simulation:
         self.print_bread_use()
         self.print_cheese_use()
         self.print_checkout_use()
+
+    def print_store_time(self):
+        store_times = self.store_times()
+        print('---------------------------------')
+        print("store time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(store_times.min(), store_times.mean(), store_times.max()))
+        sigma = store_times.std()
+        print('95% confidence interval: {:.2f} - {:.2f} [s]'.format(
+            store_times.mean() - 2 * sigma, store_times.mean() + 2 * sigma
+        ))
+        print('---------------------------------')
+
+

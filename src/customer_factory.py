@@ -122,4 +122,14 @@ class CustomerFactory:
         """ time customers are in a department getting items (does not include waiting time)"""
         return np.asarray([c.active_time_department(department) for c in self.customers])
 
+    @property
+    def store_times(self):
+        """ time spent in the store """
+        return np.asarray([c.store_time for c in self.customers])
+
+    @property
+    def start_times(self):
+        return np.asarray([c.start_time for c in self.customers])
+
+
 

@@ -104,7 +104,7 @@ class Customer:
         if self.basket:
             container = self.resources["baskets"]
         else:
-            container = self.resources["shopping_carts"]
+            container = self.resources["shopping carts"]
 
         with container.request() as container_request:
             container_start = self.env.now
