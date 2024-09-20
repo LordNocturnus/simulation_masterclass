@@ -19,7 +19,7 @@ with open(config_path) as config_p:  # if it's a path, read the file
     config = json.load(config_p)
 
 #initialize simulation
-ms = Simulation(config, runs=2, overwrite_print=False)
+ms = Simulation(config, runs=10, overwrite_print=False)
 
 ms.run()
 
