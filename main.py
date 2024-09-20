@@ -19,8 +19,13 @@ with open(config_path) as config_p:  # if it's a path, read the file
 ms = Simulation(config, runs=10)
 ms.run()
 
-ms.print_all_resource_uses()
-ms.plot_availability("shopping_carts", save=False)
+ms.print_basket_use()
+ms.print_cart_use()
+ms.print_checkout_use()
+ms.print_bread_use()
+ms.print_cheese_use()
+ms.plot_basket_availability()
+ms.plot_cart_availability()
 
 
 
