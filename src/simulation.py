@@ -49,7 +49,7 @@ class Simulation:
             # initialize shared resources
             resources = dict()
             resources["shopping_carts"] = TracedResource(env,
-                                                         capacity=self.config["resource quantities"]["shopping carts"],
+                                                         capacity=self.config["resource quantities"]["shopping_carts"],
                                                          name="Shopping carts")
             resources["baskets"] = TracedResource(env, capacity=self.config["resource quantities"]["baskets"],
                                                   name="Baskets")
@@ -174,17 +174,17 @@ class Simulation:
         else:
             plt.show()
 
-    def plot_basket_availability(self, confidence=True):
+    def plot_availability_v2(self, key, confidence=True, individual=False, save=False):
         data = []
 
         for run in range(self.runs):
-            availability, time = self.resourceLog[run]["baskets"].availability()
-            availability = np.insert(availability, 0, self.config["resource quantities"]["baskets"])
+            availability, time = self.resourceLog[run][key].availability()
+            availability = np.insert(availability, 0, self.config["resource quantities"][key])
             time = np.insert(time, 0, 0)
             data.append(np.asarray([time, availability]))
 
-        plot_average(data, "Time [s]", "Available Baskets [-]",
-                     "Average Baskets available over time", confidence)
+        plot_average(data, "Time [s]", f"Available {key} [-]",
+                     "Average Baskets available over time", confidence, individual, save)
 
     def print_use(self, key):
         aql = self.average_queue_length(key)

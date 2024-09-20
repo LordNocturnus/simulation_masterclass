@@ -20,7 +20,7 @@ ms = Simulation(config, runs=2)
 ms.run()
 
 ms.print_all_resource_uses()
-#ms.plot_basket_availability()
+ms.plot_availability_v2("shopping_carts")
 #ms.plot_cart_availability()
 
 

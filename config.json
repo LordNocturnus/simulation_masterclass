@@ -42,7 +42,7 @@
     }
   },
   "resource quantities": {
-    "shopping carts" : 45,
+    "shopping_carts" : 45,
     "baskets" : 300,
     "bread clerks" : 4,
     "cheese clerks" : 3,

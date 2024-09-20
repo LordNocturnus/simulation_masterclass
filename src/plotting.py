@@ -3,7 +3,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 
 
-def plot_average(data, x_label, y_label, title, confidence, individual):
+def plot_average(data, x_label, y_label, title, confidence, individual, save):
     time = np.sort(np.concatenate(data, axis=1)[0])
     merged_data = []
     fig, ax = plt.subplots()
@@ -20,8 +20,8 @@ def plot_average(data, x_label, y_label, title, confidence, individual):
 
     ax.step(time, average, where='post', label="average")
     if confidence:
-        ax.plot(time, average - 2 * std, label="lower bound", linestyle='--')
-        ax.plot(time, average + 2 * std, label="upper bound", linestyle='--')
+        ax.plot(time, average - 2 * std, label="lower bound", color="r")
+        ax.plot(time, average + 2 * std, label="upper bound", color="r")
 
     ax.axhline(0, color='k', linestyle='dashed')
 
@@ -36,4 +36,7 @@ def plot_average(data, x_label, y_label, title, confidence, individual):
     ax.set_ylim(ymin, ymax)
     ax.set_xlim(0, max(time))
 
-    plt.show()
+    if save:
+        plt.savefig("/plots/{}.svg".format(title))
+    else:
+        plt.show()
