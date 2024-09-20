@@ -1,8 +1,11 @@
+import os
+
 import simpy
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from scipy.signal import savgol_filter
 
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
@@ -16,7 +19,7 @@ class Simulation:
     the class stores simulation results for postprocessing
     """
 
-    def __init__(self, config, runs=1):
+    def __init__(self, config, runs=1, overwrite_print = None):
         self.runs = runs
 
         if isinstance(config, dict):
@@ -24,6 +27,10 @@ class Simulation:
         else:
             with open(config) as config:  # if it's a path, read the file
                 self.config = json.load(config)
+
+        if overwrite_print is not None:
+            if isinstance(overwrite_print, bool):
+                self.config["Customer"]["flags"]["print"] = overwrite_print
 
         self.resourceLog = []
         self.customerLog = []
@@ -81,6 +88,12 @@ class Simulation:
     def total_times(self, key):
         return np.concatenate([r.total_times(key) for r in self.customerLog])
 
+    def store_times(self):
+        return np.concatenate([c.store_times for c in self.customerLog])
+
+    def start_times(self):
+        return np.concatenate([c.start_times for c in self.customerLog])
+
     def average_queue_length(self, resource):
         numerator = 0
         denominator = 0
@@ -105,6 +118,7 @@ class Simulation:
 
         for run in range(self.runs):
 
+            # TODO: figure out how to implement checkouts
             if isinstance(self.resourceLog[run][resource], list):
                 availability, time = self.resourceLog[run][resource][0].availability()
             else:
@@ -129,14 +143,13 @@ class Simulation:
 
         # Convert list to numpy array and compute the average along the 0th axis
         interpolated_arrays = np.array(interpolated_arrays)
-        averaged_data = np.mean(interpolated_arrays, axis=0)
 
         return interpolated_arrays, common_time
 
-    def plot_availability(self, resource, save=False):  # for checkouts, take the first one
+    def plot_availability(self, resource, save=False, num_points=1000):  # for checkouts, take the first one
         fig, ax = plt.subplots()
 
-        interpolated_availability, time = self.__interporale_availability_to_common_time(resource)
+        interpolated_availability, time = self.__interporale_availability_to_common_time(resource, num_points=num_points)
 
         for run in range(self.runs):
             ax.step(time, np.append(interpolated_availability[run, :], interpolated_availability[run, :][-1])[:-1],
@@ -145,10 +158,9 @@ class Simulation:
                     alpha=0.5,
                     linewidth=0.8
                     )
-                    # label="run {}".format(run))  # piecewise constant
 
-        average_availability = interpolated_availability.mean(axis=0)
-        std_availability = interpolated_availability.std(axis=0)
+        average_availability = savgol_filter(interpolated_availability.mean(axis=0), window_length=int(num_points/12), polyorder=2)
+        std_availability = savgol_filter(interpolated_availability.std(axis=0), window_length=int(num_points/12), polyorder=2)
 
         # average +- 95% interval
         # TODO: generalize the confidence interval
@@ -170,10 +182,72 @@ class Simulation:
         ax.set_xlim(0, time.max())
 
         if save:
-            plt.savefig("/plots/{}_avaiability.svg".format(resource))
+            plt.savefig("{}/plots/{}_availability.svg".format(os.getcwd(), resource))
         else:
             plt.show()
 
+        plt.clf()
+
+
+    def plot_store_time_vs_start_time(self, save=False):
+        fig, ax = plt.subplots()
+        store_time = self.store_times()
+        start_time = self.start_times()
+
+        ax.scatter(start_time, store_time, marker='x')
+        ax.axhline(store_time.mean(), color='k', linestyle='dashed')
+
+        ax.set_xlabel("customer arrival time [s]")
+        ax.set_ylabel("customer throughput time [s]")
+
+        ax.set_xlim(0, max(start_time))
+
+        ax.grid(True)
+        if save:
+            plt.savefig("{}/plots/store_time_vs_start_time.svg".format(os.getcwd()))
+        else:
+            plt.show()
+
+        plt.clf()
+
+
+    def plot_store_time_histogram(self, save=False, n_bins=50):
+        fig, ax = plt.subplots()
+        store_time = self.store_times()
+
+        ax.hist(store_time, bins=n_bins)
+
+        mu = store_time.mean()
+        sigma = store_time.std()
+
+        # TODO: generalize confidence
+        ax.axvline(mu, color='k', label='$\mu \pm 2\sigma$')
+        ax.axvline(mu-2*sigma, color='k', linestyle='dashed')
+        ax.axvline(mu+2*sigma, color='k', linestyle='dashed')
+
+
+
+        ax.set_ylabel("% of customers")
+        ax.set_xlabel("customer throughput time [s]")
+        ax.legend()
+
+        ax.grid(True)
+        if save:
+            plt.savefig("{}/plots/store_time_histogram.svg".format(os.getcwd()))
+        else:
+            plt.show()
+
+        plt.clf()
+
+    def print_basket_use(self):
+        aql = self.average_queue_length("baskets")
+        wt = self.wait_times_baskets
+        ut = self.use_times_baskets
+        print('---------------------------------')
+        print("use data for baskets")
+        print("average queue length: {:.2f}".format(aql))
+        print("wait time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(wt.min(), wt.mean(), wt.max()))
+        print("use time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(ut.min(), ut.mean(), ut.max()))
     def plot_availability_v2(self, key, confidence=True, individual=False, save=False):
         data = []
 
@@ -205,3 +279,15 @@ class Simulation:
         self.print_use("C")
         self.print_use("D")
         self.print_use("checkout")
+
+    def print_store_time(self):
+        store_times = self.store_times()
+        print('---------------------------------')
+        print("store time [s] (min/ave/max): {:.2f}/{:.2f}/{:.2f}".format(store_times.min(), store_times.mean(), store_times.max()))
+        sigma = store_times.std()
+        print('95% confidence interval: {:.2f} - {:.2f} [s]'.format(
+            store_times.mean() - 2 * sigma, store_times.mean() + 2 * sigma
+        ))
+        print('---------------------------------')
+
+

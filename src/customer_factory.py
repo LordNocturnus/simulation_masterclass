@@ -86,3 +86,15 @@ class CustomerFactory:
         elif key == "shopping_carts":
             return np.asarray([c.total_time("container") for c in self.customers if not c.basket])
         return np.asarray([c.total_time(key) for c in self.customers])
+
+    @property
+    def store_times(self):
+        """ time spent in the store """
+        return np.asarray([c.store_time for c in self.customers])
+
+    @property
+    def start_times(self):
+        return np.asarray([c.start_time for c in self.customers])
+
+
+
