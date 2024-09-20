@@ -3,19 +3,21 @@ from scipy.interpolate import interp1d
 import numpy as np
 
 
-def plot_average(data, x_label, y_label, title, confidence):
+def plot_average(data, x_label, y_label, title, confidence, individual):
     time = np.sort(np.concatenate(data, axis=1)[0])
     merged_data = []
+    fig, ax = plt.subplots()
 
-    for d in data:
+    for k, d in enumerate(data):
         interp = interp1d(d[0], d[1], kind="previous", fill_value="extrapolate")
         merged_data.append(interp(time))
+        if individual:
+            ax.plot(time, merged_data[-1], label=f"run {k}")
 
     merged_data = np.array(merged_data)
     average = np.average(merged_data, axis=0)
     std = np.std(merged_data, axis=0)
 
-    fig, ax = plt.subplots()
     ax.step(time, average, where='post', label="average")
     if confidence:
         ax.plot(time, average - 2 * std, label="lower bound", linestyle='--')

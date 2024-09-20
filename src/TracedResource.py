@@ -32,7 +32,6 @@ class TracedResource(Resource):
     def availability(self):
         demand = np.cumsum(np.asarray(self.log_event))
         available = self.capacity - demand
-
         return available, np.asarray(self.log_time)
 
     def queue_length(self):

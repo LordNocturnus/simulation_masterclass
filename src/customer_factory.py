@@ -66,60 +66,23 @@ class CustomerFactory:
         return Customer(self.env, self.config["stochastics"], self.departments, self.resources, self.config["flags"],
                         shopping_list, basket, route, t, ucid, seed)
 
-    def wait_times_containers(self):
-        """ time customers are waiting for containers"""
-        return np.asarray([c.wait_time_container for c in self.customers])
+    def wait_times(self, key):
+        if key == "baskets":
+            return np.asarray([c.wait_times["container"] for c in self.customers if c.basket])
+        elif key == "shopping_carts":
+            return np.asarray([c.wait_times["container"] for c in self.customers if not c.basket])
+        return np.asarray([c.wait_times[key] for c in self.customers])
 
-    @property
-    def wait_times_baskets(self):
-        """ time customers are waiting for baskets"""
-        return np.asarray([c.wait_time_container for c in self.customers if c.basket])
+    def use_times(self, key):
+        if key == "baskets":
+            return np.asarray([c.use_times["container"] for c in self.customers if c.basket])
+        elif key == "shopping_carts":
+            return np.asarray([c.use_times["container"] for c in self.customers if not c.basket])
+        return np.asarray([c.use_times[key] for c in self.customers])
 
-    @property
-    def wait_times_carts(self):
-        """ time customers are waiting for carts"""
-        return np.asarray([c.wait_time_container for c in self.customers if not c.basket])
-
-    @property
-    def wait_times_checkout(self):
-        """ time customers are waiting for a checkout"""
-        return np.asarray([c.wait_time_checkout for c in self.customers])
-
-    def wait_times_department(self, department):
-        """ time customers are waiting at a specific department"""
-        return np.asarray([c.wait_time_department(department) for c in self.customers])
-
-    @property
-    def use_times_containers(self):
-        """ time customers are in possession of containers"""
-        return np.asarray([c.use_time_container for c in self.customers])
-
-    @property
-    def use_times_baskets(self):
-        """ time customers are in possession of baskets"""
-        return np.asarray([c.use_time_container for c in self.customers if c.basket])
-
-    @property
-    def use_times_carts(self):
-        """ time customers are in possession of carts"""
-        return np.asarray([c.use_time_container for c in self.customers if not c.basket])
-
-    @property
-    def use_times_checkout(self):
-        """ time customers are at a checkout (includes waiting time in checkout queue)"""
-        return np.asarray([c.use_time_checkout for c in self.customers])
-
-    def use_times_department(self, department):
-        """ time customers are in department (includes waiting time in departments with a queue)"""
-        return np.asarray([c.use_time_department(department) for c in self.customers])
-
-    @property
-    def active_times_checkout(self):
-        """ time customers are using a checkout (does not include waiting time)"""
-        return np.asarray([c.active_time_checkout for c in self.customers])
-
-    def active_times_department(self, department):
-        """ time customers are in a department getting items (does not include waiting time)"""
-        return np.asarray([c.active_time_department(department) for c in self.customers])
-
-
+    def total_times(self, key):
+        if key == "baskets":
+            return np.asarray([c.total_time("container") for c in self.customers if c.basket])
+        elif key == "shopping_carts":
+            return np.asarray([c.total_time("container") for c in self.customers if not c.basket])
+        return np.asarray([c.total_time(key) for c in self.customers])
