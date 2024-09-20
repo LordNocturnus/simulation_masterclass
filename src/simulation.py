@@ -2,7 +2,7 @@ import simpy
 import json
 import matplotlib.pyplot as plt
 import numpy as np
-
+import scipy
 
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
@@ -144,9 +144,10 @@ class Simulation:
                 denominator += max(time)
         return numerator / denominator
 
-    def plot_availability(self, resource):  # for checkouts, take the first one
-        fig, ax = plt.subplots()
-        t_max = 0
+    def __interporale_availability_to_common_time(self, resource, num_points=1000):
+
+        data_arrays = [None] * self.runs
+        time_arrays = [None] * self.runs
 
         for run in range(self.runs):
 
@@ -155,10 +156,52 @@ class Simulation:
             else:
                 availability, time = self.resourceLog[run][resource].availability()
 
-            t_max = max(t_max, max(time))
+            data_arrays[run] = availability
+            time_arrays[run] = time
 
-            ax.step(time, np.append(availability, availability[-1])[:-1],
-                    where='post', label="run {}".format(run))  # piecewise constant
+        # Determine the overall time range based on the time arrays
+        min_time = max([t.min() for t in time_arrays])  # Max of the min times to avoid extrapolation
+        max_time = min([t.max() for t in time_arrays])  # Min of the max times to avoid extrapolation
+
+        common_time = np.linspace(min_time, max_time, num_points)
+
+        interpolated_arrays = []
+
+        # Interpolate each data array to the common time grid
+        for time_array, data_array in zip(time_arrays, data_arrays):
+            interp_func = scipy.interpolate.interp1d(time_array, data_array, kind='linear', bounds_error=False, fill_value="extrapolate")
+            interpolated_data = interp_func(common_time)
+            interpolated_arrays.append(interpolated_data)
+
+        # Convert list to numpy array and compute the average along the 0th axis
+        interpolated_arrays = np.array(interpolated_arrays)
+        averaged_data = np.mean(interpolated_arrays, axis=0)
+
+        return interpolated_arrays, common_time
+
+    def plot_availability(self, resource, save=False):  # for checkouts, take the first one
+        fig, ax = plt.subplots()
+
+        interpolated_availability, time = self.__interporale_availability_to_common_time(resource)
+
+        for run in range(self.runs):
+            ax.step(time, np.append(interpolated_availability[run, :], interpolated_availability[run, :][-1])[:-1],
+                    where='post',
+                    color='k',
+                    alpha=0.5,
+                    linewidth=0.8
+                    )
+                    # label="run {}".format(run))  # piecewise constant
+
+        average_availability = interpolated_availability.mean(axis=0)
+        std_availability = interpolated_availability.std(axis=0)
+
+        # average +- 95% interval
+        # TODO: generalize the confidence interval
+        ax.plot(time,average_availability, color='r',label='$\mu \pm 2\sigma$')
+        ax.plot(time,average_availability-2*std_availability, color='r', linestyle='dashed')
+        ax.plot(time,average_availability+2*std_availability, color='r', linestyle='dashed')
+
 
         ax.axhline(0, color='k', linestyle='dashed')
 
@@ -170,10 +213,13 @@ class Simulation:
         ax.axhspan(ymin=ymin, ymax=0, facecolor='r', alpha=0.25)
         ax.axhspan(ymin=0, ymax=ymax, facecolor='g', alpha=0.25)
         ax.set_ylim(ymin, ymax)
-        ax.set_xlim(0, t_max)
+        ax.set_xlim(0, time.max())
 
         ax.grid(True)
-        plt.show()
+        if save:
+            plt.savefig("/plots/{}_avaiability.svg".format(resource))
+        else:
+            plt.show()
 
     def print_basket_use(self):
         aql = self.average_queue_length("baskets")
@@ -235,3 +281,10 @@ class Simulation:
         print("average use time [s]: {:.2f}".format(aut))
         print("average active time [s]: {:.2f}".format(aat))
         print('---------------------------------')
+
+    def print_all_resource_uses(self):
+        self.print_cart_use()
+        self.print_basket_use()
+        self.print_bread_use()
+        self.print_cheese_use()
+        self.print_checkout_use()
