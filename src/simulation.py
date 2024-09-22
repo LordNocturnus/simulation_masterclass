@@ -286,4 +286,21 @@ class Simulation:
         ))
         print('---------------------------------')
 
+    def get_animation_departments(self):
+        env = simpy.Environment()
+        departments = dict()
+        departments["Entrance"] = Department("Entrance", env, self.config["resource quantities"]["shopping_carts"], None)
+        departments["Department A"] = Department("Department A - Fruit & Vegetables", env)
+        departments["Department B"] = Department("Department B - Meat & Fish", env)
+        departments["DepartmentC"] = Department("Department C - Bread", env, self.config["resource quantities"]["bread clerks"],
+                                      self.config["Customer"]["stochastics"]["bread_vars"])
+        departments["DepartmentD"] = Department("Department D - Cheese", env, self.config["resource quantities"]["cheese clerks"],
+                                      self.config["Customer"]["stochastics"]["cheese_vars"])
+        departments["DepartmentE"] = Department("Department E - Canned & packed food", env)
+        departments["DepartmentF"] = Department("Department F - Frozen food", env)
+        departments["DepartmentG"] = Department("Department G - Drinks", env)
+        departments["Checkouts"] = Department("Checkouts", env, self.config["resource quantities"]["checkouts"], None)
+
+        return departments, env
+
 
