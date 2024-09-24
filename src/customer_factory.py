@@ -9,11 +9,11 @@ from src.customer import Customer
 
 class CustomerFactory:
 
-    def __init__(self, env, customer_config, departments, resources, seed=0):
+    def __init__(self, env, customer_config, store, resources, seed=0):
         self.env = env
         self.rng = npr.default_rng(seed)
 
-        self.departments = departments
+        self.store = store
         self.resources = resources
 
         self.customers = []
@@ -63,7 +63,7 @@ class CustomerFactory:
         route = self.rng.choice(self.routes, p=self.route_probabilities)
         seed = self.rng.integers(0, sys.maxsize)
 
-        return Customer(self.env, self.config["stochastics"], self.departments, self.resources, self.config["flags"],
+        return Customer(self.env, self.config["stochastics"], self.store, self.resources, self.config["flags"],
                         shopping_list, basket, route, t, ucid, seed)
 
     def wait_times(self, key):

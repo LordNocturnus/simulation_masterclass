@@ -3,14 +3,16 @@ from operator import itemgetter
 import numpy.random as npr
 import numpy as np
 
+from src.store import Store
+
 
 class Customer:
 
-    def __init__(self, env, stochastics:dict, departments: dict, resources: dict, flags:dict,
-                 shopping_list: dict[str, int], basket: bool, route: str, start_time, ucid, seed):
+    def __init__(self, env, stochastics:dict, store: Store, resources: dict, flags:dict,
+                 shopping_list: dict[str, int], basket: bool, route: str, start_time: float, ucid: int, seed: int):
         self.env = env
         self.resources = resources
-        self.departments = departments
+        self.store = store
         self.shopping_list = shopping_list
         self.basket = basket
         self.route = route
@@ -21,11 +23,16 @@ class Customer:
         self.flags = flags
         # initialize wait times and use times of resources
         self.wait_times = {}
-        # for containers its without
         self.use_times = {}
         self.store_time = 0.0
 
+        self._pos = np.zeros(2, dtype=np.float64)
+
         self.action = self.env.process(self.run())
+
+    @property
+    def pos(self):
+        return self._pos
 
     @property
     def total_items(self):
@@ -55,7 +62,7 @@ class Customer:
             # iterate through department path
             for department_id in self.route:
                 department_wait = self.env.now
-                current_department = self.departments[department_id]
+                current_department = self.store.departments[department_id]
                 if self.flags["print"]:
                     print('{:.2f}: {} enters department {}'.format(self.env.now, self.ucid,
                                                                    current_department.name))
@@ -72,15 +79,19 @@ class Customer:
                     self.wait_times[department_id] = self.env.now - department_wait
                     department_use = self.env.now
                     for i in range(self.shopping_list[department_id]):
+                        item_pos = current_department.get_item_location(self.rng)
+                        if self.flags["print"]:
+                            print('{:.2f}: {} picks up item at ({:.2f},{:.2f})'.format(self.env.now, self.ucid,
+                                                                                       item_pos[0], item_pos[1]))
                         yield self.env.timeout(self.rng.uniform(self.stochastics["search_bounds"][0],
                                                                 self.stochastics["search_bounds"][1]))
                     if self.flags["print"]:
-                        print('{:.2f}: {} picks {} items at department {} in {:.2f} seconds'.format(self.env.now,
-                                                                                                    self.ucid,
-                                                                                                    self.shopping_list[
-                                                                                                        department_id],
-                                                                                                    department_id,
-                                                                                                    self.env.now - department_wait))
+                        print('{:.2f}: {} picked {} items at department {} in {:.2f} seconds'.format(self.env.now,
+                                                                                                     self.ucid,
+                                                                                                     self.shopping_list[
+                                                                                                         department_id],
+                                                                                                     department_id,
+                                                                                                     self.env.now - department_wait))
                 if self.flags["print"]:
                     print('{:.2f}: {} leaves department {}'.format(self.env.now, self.ucid, department_id))
                 self.use_times[department_id] = self.env.now - department_use

@@ -1,10 +1,12 @@
 from src.TracedResource import TracedResource
 from scipy.stats import truncnorm
 
+import numpy as np
+
 
 class Department:
 
-    def __init__(self, name, env, queue=None, times=None):
+    def __init__(self, name, env, queue=None, times=None, shelves=[]):
         self.name = name
         self.env = env
 
@@ -14,3 +16,18 @@ class Department:
         else:
             self.queue = None
             self.times = None
+
+        self.shelves = shelves
+
+        self.probabilities = np.asarray([s.length for s in self.shelves])
+        self.probabilities /= np.sum(self.probabilities)
+
+    def scale(self, old, new):
+        # scale using old and new extends of the store
+        for shelf in self.shelves:
+            shelf.scale(old, new)
+
+    def get_item_location(self, rng):
+        shelf = rng.choice(self.shelves, p=self.probabilities)
+        return shelf.relative_position(rng.uniform(0 , 1))
+
