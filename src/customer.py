@@ -32,8 +32,14 @@ class Customer:
         # total number of items in the shopping list
         return sum([value for key, value in self.shopping_list.items()])
 
+    @property
     def total_time(self, key):
         return self.wait_times[key] + self.use_times[key]
+
+    @property
+    def exit_time(self):
+        # the time the customer exits the store
+        return self.store_time + self.start_time
 
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):

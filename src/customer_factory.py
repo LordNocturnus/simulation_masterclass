@@ -96,5 +96,10 @@ class CustomerFactory:
     def start_times(self):
         return np.asarray([c.start_time for c in self.customers])
 
+    @property
+    def simulation_end_time(self):
+        # total simulation runs from zero until the last customer leaves the store
+        return max([c.exit_time for c in self.customers])
+
 
 
