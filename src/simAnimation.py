@@ -1,9 +1,9 @@
 import pygame
 from matplotlib import pyplot as plt
-
+from datetime import timedelta
 
 class simAnimation():
-    def __init__(self, sim, run_index=0, window_size = (800, 600), time_scale=1/3600, timestep_sim_s = 1):
+    def __init__(self, sim, run_index=0, window_size = (800, 600), time_scale_anim=1/3600, timestep_sim_seconds = 1):
         self.sim = sim
         self.resources = sim.resourceLog[run_index]
         self.customers = sim.customerLog[run_index]
@@ -13,29 +13,27 @@ class simAnimation():
         self.window_size = window_size
         self.window = pygame.display.set_mode(window_size)
 
-        self.END_TIME = self.customers.simulation_end_time
-        self.TIME_SCALE = time_scale # by default, animation takes 12 seconds (1 sec in anim time - 1 hour in sim time)
-        self.END_TICKS = int(self.END_TIME * self.TIME_SCALE) # end tick for pygame
-        self.TIME_STEP_MS = int(timestep_sim_s * self.TIME_SCALE * 1000) # tick steptime for pygame, in miliseconds
-
+        # TIME VARIABLES
+        self.sim_time = 0 # initialize sim time at zero
+        self.sim_timestep = timestep_sim_seconds
+        self.sim_end_time = self.customers.simulation_end_time
+        self.time_scale_anim = time_scale_anim  # ratio of animation time to simulation time ( default: 1 second / 1 hour)
+         # tick steptime for pygame, in miliseconds
+        self.time_step_anim_miliseconds = int(timestep_sim_seconds * self.time_scale_anim * 1000)
 
         self.font = pygame.font.Font('freesansbold.ttf', 32)
         self.colors = {
-            'white' : (0, 0, 0),
+            'white' : (255, 255, 255),
+            'black': (0, 0, 0),
             'green' : (0, 255, 0),
             'blue' : (0, 0, 128)
         }
 
-    def run(self):
+    def run(self, loopTillQuit = True):
+        self.START_TICKS = pygame.time.get_ticks()
+        while self.sim_time < self.sim_end_time or loopTillQuit: # run until end time is reached or loop until quit
 
-        timetext = self.font.render('time: {:.2f}'.format(pygame.time.get_ticks() / self.TIME_SCALE),
-                                    True,
-                                    self.colors['green'],
-                                    self.colors['blue'])
-        timerect = timetext.get_rect()
 
-        while pygame.time.get_ticks() <= self.END_TICKS: # run until end tick is reached
-            pygame.time.delay(self.TIME_STEP_MS) # iterate animation time
             self.window.fill(self.colors['white'])  # set background color
 
             for event in pygame.event.get():
@@ -43,12 +41,41 @@ class simAnimation():
                     pygame.quit()
                     quit()
 
-            self.window.blit(timetext, timerect)
+
+            self.display_timer() # timer in top-right corner
+
+            #TODO: ADD STUFF TO WINDOW
+            #1) departments with text: name of dept, no. of customers inside
+            #2) for dept with queues, add queue length(s)
+            #3) shopping cart and basket availability and queues
+            #4) (optional) running event log
+            #5) (very optional) customer movement between departments
 
 
-            #TODO: ADD STUFF
 
+            # end-of-loop routine
+            pygame.time.delay(self.time_step_anim_miliseconds) # iterate animation time
+            self.sim_time += self.sim_timestep
+
+            # reset sim timer once end time reached
+            if self.sim_time > self.sim_end_time:
+                self.sim_time = 0.0
             pygame.display.update() #update the window view at the end of the loop
+
+    def display_timer(self):
+        # TIME WINDOW
+        timetext = self.font.render(self.simulation_time_text(),
+                                    True,
+                                    self.colors['black'],
+                                    self.colors['white'])
+        timerect = timetext.get_rect()
+        self.window.blit(timetext, timerect)
+
+    def simulation_time_text(self):
+        sec = 8 * 3600 + self.sim_time # START AT 8 AM => add 8 hours to timer
+        td = timedelta(seconds = sec)
+        return str(td)
+
 
 
 if __name__ == "__main__":
@@ -58,14 +85,15 @@ if __name__ == "__main__":
     import json
 
     # access config file
-    config_path = pathlib.Path(os.getcwd()).joinpath("../debug_config.json")
+    # config_path = pathlib.Path(os.getcwd()).joinpath("../debug_config.json")
+    config_path = pathlib.Path(os.getcwd()).joinpath("../config.json")
     with open(config_path) as config_p:  # if it's a path, read the file
         config = json.load(config_p)
 
     # initialize simulation
     ms = Simulation(config, runs=1, overwrite_print=False)
     ms.run()
-    sa = simAnimation(ms)
+    sa = simAnimation(ms, timestep_sim_seconds=3600)
     sa.run()
 
 
