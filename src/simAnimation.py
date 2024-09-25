@@ -118,7 +118,6 @@ class simAnimation():
 
         # queue
         if dep.queue is not None:
-            # TODO: figure out queue length!
             queue_length = self.get_queue_length(dep.queue)
             return '{}  | customers: {} | queue length: {}'.format(dep.name, no_customers, queue_length)
 
