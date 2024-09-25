@@ -119,7 +119,7 @@ class simAnimation():
         # queue
         if dep.queue is not None:
             # TODO: figure out queue length!
-            queue_length = 0
+            queue_length = self.get_queue_length(dep.queue)
             return '{}  | customers: {} | queue length: {}'.format(dep.name, no_customers, queue_length)
 
         # no queue
@@ -127,9 +127,18 @@ class simAnimation():
             return '{} | customers: {}'.format(dep.name, no_customers)
 
     def get_customers_in_dep(self, dep):
-        # oneliner extravaganza
         # returns the no. of customers in department dep at time self.simtime
-        return sum([ind for ind, time in zip(dep.log_event, dep.log_time) if time <= self.sim_time])
+        # wrapper around get_event_cumsum
+        return self.get_event_cumsum(dep.log_event, dep.log_time)
+
+    def get_queue_length(self, resource):
+        # wrapper around get_event_cumsum
+        return self.get_event_cumsum(resource.log_event, resource.log_time)
+
+    def get_event_cumsum(self, log_event, log_time):
+        # oneliner extravaganza
+        return sum([ind for ind, time in zip(log_event, log_time) if time <= self.sim_time])
+
 
     def display_entrance(self):
         # TODO: fill in
