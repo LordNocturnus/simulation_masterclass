@@ -18,10 +18,10 @@ config_path = pathlib.Path(os.getcwd()).joinpath("debug_config.json")
 with open(config_path) as config_p:  # if it's a path, read the file
     config = json.load(config_p)
 
-#initialize simulation
+"""#initialize simulation
 ms = Simulation(config, runs=1)
 
-ms.run()
+ms.run()#"""
 
 """# show results
 ms.print_all_resource_uses()
