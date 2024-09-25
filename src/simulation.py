@@ -34,6 +34,7 @@ class Simulation:
 
         self.resourceLog = []
         self.customerLog = []
+        self.departmentLog = []
 
     def run(self):
         """
@@ -66,6 +67,8 @@ class Simulation:
             ]
             resources["C"] = departments["C"].queue
             resources["D"] = departments["D"].queue
+
+            self.departmentLog.append(departments)
 
             # initialize the customer factory, SEED EQUAL TO THE RUN INDEX
             customer_factory = CustomerFactory(env, self.config, departments, resources, seed=run)

@@ -62,6 +62,10 @@ class Customer:
             for department_id in self.route:
                 department_wait = self.env.now
                 current_department = self.departments[department_id]
+
+                # log department entry
+                current_department.log_event.append(1)
+                current_department.log_time.append(self.env.now)
                 if self.flags["print"]:
                     print('{:.2f}: {} enters department {}'.format(self.env.now, self.ucid,
                                                                    current_department.name))
@@ -87,8 +91,14 @@ class Customer:
                                                                                                         department_id],
                                                                                                     department_id,
                                                                                                     self.env.now - department_wait))
+
+                # log department exit
+                current_department.log_event.append(-1)
+                current_department.log_time.append(self.env.now)
                 if self.flags["print"]:
                     print('{:.2f}: {} leaves department {}'.format(self.env.now, self.ucid, department_id))
+
+
                 self.use_times[department_id] = self.env.now - department_use
 
             # checkout
