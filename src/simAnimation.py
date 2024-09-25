@@ -41,18 +41,12 @@ class simAnimation():
         }
 
     def run(self, loopTillQuit = True):
-        self.START_TICKS = pygame.time.get_ticks()
         while self.sim_time < self.sim_end_time or loopTillQuit: # run until end time is reached or loop until quit
-
-
             self.window.fill(self.colors['white'])  # set background color
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: # quit animation if requested
                     pygame.quit()
                     quit()
-
-
 
             #TODO: ADD STUFF TO WINDOW
             #0) simulation time display
@@ -90,8 +84,6 @@ class simAnimation():
         return str(td)
 
     def display_departments(self):
-
-
         NDEPS = len(self.departments)
 
         rect_height = self.window_size[1] / (NDEPS + 10) # arbitrary
@@ -115,22 +107,18 @@ class simAnimation():
 
     def department_rect_width(self, dep):
         no_customers = self.get_customers_in_dep(dep)
-        base_rect_width = self.window_size[0] / 3
+        base_rect_width = self.window_size[0] / 3 # arbitrary
         size_range = self.window_size[0] - base_rect_width - 2 * self.margin
 
-        return base_rect_width + size_range * (1 - np.exp( - no_customers * 0.1386)) # arbitrary interpolation function
-
-
+        return base_rect_width + size_range * (1 - np.exp(- no_customers * 0.1386)) # arbitrary interpolation function
 
     def department_text(self, dep):
-
         # render does not support newline characters :))))))))
-
         no_customers = self.get_customers_in_dep(dep)
 
         # queue
         if dep.queue is not None:
-            # TODO: add queue length!
+            # TODO: figure out queue length!
             queue_length = 0
             return '{}  | customers: {} | queue length: {}'.format(dep.name, no_customers, queue_length)
 
@@ -143,7 +131,6 @@ class simAnimation():
         # returns the no. of customers in department dep at time self.simtime
         return sum([ind for ind, time in zip(dep.log_event, dep.log_time) if time <= self.sim_time])
 
-
     def display_entrance(self):
         # TODO: fill in
         pass
@@ -151,10 +138,6 @@ class simAnimation():
     def display_checkout(self):
         # TODO: fill in
         pass
-
-
-
-
 
 
 if __name__ == "__main__":
