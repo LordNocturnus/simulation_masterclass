@@ -9,7 +9,7 @@ from scipy.signal import savgol_filter
 
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
-from src.department import Department
+from src.customer_visualization import Visualization
 from src.store import Store
 from src.plotting import plot_average
 
@@ -20,7 +20,7 @@ class Simulation:
     the class stores simulation results for postprocessing
     """
 
-    def __init__(self, config, runs=1, overwrite_print = None):
+    def __init__(self, config, runs=1, overwrite_print = None, visualization=False):
         self.runs = runs
 
         if isinstance(config, dict):
@@ -32,6 +32,9 @@ class Simulation:
         if overwrite_print is not None:
             if isinstance(overwrite_print, bool):
                 self.config["Customer"]["flags"]["print"] = overwrite_print
+
+        self.visualization = visualization
+
 
         self.resourceLog = []
         self.customerLog = []
@@ -62,6 +65,9 @@ class Simulation:
             # initialize the customer factory, SEED EQUAL TO THE RUN INDEX
             customer_factory = CustomerFactory(env, self.config, store, resources, seed=run)
             customer_factory.run()
+
+            visualization = Visualization(store, customer_factory, env, np.asarray([40.0, 30.0]))
+            env.process(visualization.run(env))
 
             # run simulation
             env.run()
