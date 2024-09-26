@@ -9,7 +9,8 @@ from src.store import Store
 class Customer:
 
     def __init__(self, env, stochastics:dict, store: Store, resources: dict, flags:dict,
-                 shopping_list: dict[str, int], basket: bool, route: str, start_time: float, ucid: int, seed: int):
+                 shopping_list: dict[str, int], basket: bool, route: str, start_time: float, walking_speed: float,
+                 ucid: int, seed: int):
         self.env = env
         self.resources = resources
         self.store = store
@@ -21,10 +22,16 @@ class Customer:
         self.rng = npr.default_rng(seed)
         self.stochastics = stochastics
         self.flags = flags
+        self.walking_speed = walking_speed # walking speed in m/s
         # initialize wait times and use times of resources
         self.wait_times = {}
         self.use_times = {}
         self.store_time = 0.0
+
+        # Everything related to allowing customers to walk
+        self.walking = False
+        self.walking_start_time = 0.0
+        self.walking_direction = np.zeros(2, dtype=np.float64)
 
         self._pos = np.zeros(2, dtype=np.float64)
 
@@ -32,7 +39,9 @@ class Customer:
 
     @property
     def pos(self):
-        return self._pos
+        if not self.walking:
+            return self._pos
+        return self._pos + self.walking_direction * (self.env.now - self.walking_start_time)
 
     @property
     def total_items(self):
@@ -41,6 +50,17 @@ class Customer:
 
     def total_time(self, key):
         return self.wait_times[key] + self.use_times[key]
+
+    def walk(self, destination):
+        # customer sub process for walking from one location to the next
+        self.walking_start_time = self.env.now
+        walking_time = np.linalg.norm(destination - self.pos) / self.walking_speed
+        self.walking_direction = (destination - self.pos) / walking_time
+        self.walking = True
+        yield self.env.timeout(walking_time)
+        self.walking = False
+        # only update location after arrival not during walking
+        self._pos = destination
 
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):
@@ -80,6 +100,13 @@ class Customer:
                     department_use = self.env.now
                     for i in range(self.shopping_list[department_id]):
                         item_pos = current_department.get_item_location(self.rng)
+
+                        if self.flags["print"]:
+                            print('{:.2f}: {} walking from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
+                                self.env.now, self.ucid, self.pos[0], self.pos[1], item_pos[0], item_pos[1]))
+                        walking = self.env.process(self.walk(item_pos))
+                        yield walking
+
                         if self.flags["print"]:
                             print('{:.2f}: {} picks up item at ({:.2f},{:.2f})'.format(self.env.now, self.ucid,
                                                                                        item_pos[0], item_pos[1]))

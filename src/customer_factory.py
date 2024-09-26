@@ -63,8 +63,16 @@ class CustomerFactory:
         route = self.rng.choice(self.routes, p=self.route_probabilities)
         seed = self.rng.integers(0, sys.maxsize)
 
+        if basket:
+            walking_speed = self.rng.uniform(self.config["stochastics"]["walking_basket"][0],
+                                             self.config["stochastics"]["walking_basket"][1]) / 3.6 # convert km/h to m/s
+        else:
+            walking_speed = self.rng.triangular(self.config["stochastics"]["walking_cart"][0],
+                                                self.config["stochastics"]["walking_cart"][1],
+                                                self.config["stochastics"]["walking_cart"][2],) / 3.6
+
         return Customer(self.env, self.config["stochastics"], self.store, self.resources, self.config["flags"],
-                        shopping_list, basket, route, t, ucid, seed)
+                        shopping_list, basket, route, t, walking_speed, ucid, seed)
 
     def wait_times(self, key):
         if key == "baskets":

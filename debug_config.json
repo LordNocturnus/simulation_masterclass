@@ -23,7 +23,9 @@
       "payment_bounds" : [40, 60],
       "scan_vars" : [1.1, 0.11],
       "bread_vars" : [120, 12],
-      "cheese_vars" : [60, 6]
+      "cheese_vars" : [60, 6],
+      "walking_basket": [4, 5],
+      "walking_cart": [2, 3, 5]
     },
     "flags": {
       "print" : true,
