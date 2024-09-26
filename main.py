@@ -24,7 +24,7 @@ ms = Simulation(config, runs=3, overwrite_print=False)
 
 ms.run()
 
-sa = SimAnimation(ms, timestep_sim_seconds=60, fps=30, window_size=(1920, 1080))
+sa = SimAnimation(ms, timestep_sim_seconds=60, fps=30, window_size=(1080, 720))
 sa.run()
 
 # show results
