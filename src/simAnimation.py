@@ -5,7 +5,7 @@ import numpy as np
 
 
 class simAnimation():
-    def __init__(self, sim, run_index=0, window_size = (800, 600), time_scale_anim=1/3600, timestep_sim_seconds = 1):
+    def __init__(self, sim, run_index=0, window_size=(800, 600), time_scale_anim=1/3600, timestep_sim_seconds = 1):
         self.sim = sim
         self.resources = sim.resourceLog[run_index]
         self.customers = sim.customerLog[run_index]
@@ -29,6 +29,8 @@ class simAnimation():
 
         self.timefont = pygame.font.Font('freesansbold.ttf', 32)
         self.departmentfont = pygame.font.Font('freesansbold.ttf', 16)
+        self.availabilityfont = pygame.font.Font('freesansbold.ttf', 12)
+
 
 
 
@@ -39,6 +41,8 @@ class simAnimation():
             'blue' : (0, 0, 255),
             'red' : (255, 0, 0)
         }
+
+        self.department_ybox = 0
 
     def run(self, loopTillQuit = True):
         while self.sim_time < self.sim_end_time or loopTillQuit: # run until end time is reached or loop until quit
@@ -55,6 +59,7 @@ class simAnimation():
             #1) departments with text: name of dept, no. of customers inside
             #2) for dept with queues, add queue length(s)
             self.display_departments()
+            self.display_availability_bars()
 
             #3) entrance and checkout boxes, with queue lengths and shopping cart/basket availability
             #4) (optional) running event log
@@ -75,7 +80,6 @@ class simAnimation():
                                     True,
                                     self.colors['black'],
                                     self.colors['white'])
-        timerect = timetext.get_rect()
         self.window.blit(timetext, (self.margin, self.margin))  # draw text at top-right corner
 
     def simulation_time_text(self):
@@ -86,7 +90,7 @@ class simAnimation():
     def display_departments(self):
         NDEPS = len(self.departments)
 
-        rect_height = self.window_size[1] / (NDEPS + 10) # arbitrary
+        rect_height = self.window_size[1] / 20
 
         xrect = 0 + self.margin
         yrect = rect_height + self.margin
@@ -95,7 +99,7 @@ class simAnimation():
 
             rect_width = self.department_rect_width(dep)
             rect = pygame.Rect((xrect, yrect), (rect_width, rect_height))
-            _ = pygame.draw.rect(self.window, self.colors['red'], rect)
+            _ = pygame.draw.rect(self.window, self.colors['blue'], rect)
 
             depttext = self.departmentfont.render(self.department_text(dep),
                                             True,
@@ -104,13 +108,15 @@ class simAnimation():
 
             yrect += rect_height + self.margin
 
+        self.department_ybox = yrect
+
 
     def department_rect_width(self, dep):
         no_customers = self.get_customers_in_dep(dep)
         base_rect_width = self.window_size[0] / 3 # arbitrary
         size_range = self.window_size[0] - base_rect_width - 2 * self.margin
 
-        return base_rect_width + size_range * (1 - np.exp(- no_customers * 0.1386)) # arbitrary interpolation function
+        return base_rect_width + size_range * (1 - np.exp(-no_customers * 0.1386)) # arbitrary interpolation function
 
     def department_text(self, dep):
         # render does not support newline characters :))))))))
@@ -119,7 +125,7 @@ class simAnimation():
         # queue
         if dep.queue is not None:
             queue_length = self.get_queue_length(dep.queue)
-            return '{}  | customers: {} | queue length: {}'.format(dep.name, no_customers, queue_length)
+            return '{}  | customers: {} | including queue: {}'.format(dep.name, no_customers, queue_length)
 
         # no queue
         else:
@@ -138,14 +144,57 @@ class simAnimation():
         # oneliner extravaganza
         return sum([ind for ind, time in zip(log_event, log_time) if time <= self.sim_time])
 
+    def display_availability_bars(self):
 
-    def display_entrance(self):
-        # TODO: fill in
-        pass
+        xmid = self.window_size[0] * 1/2
+        ymid = self.department_ybox + self.margin
+        height = self.window_size[1] / 20
+        for _, resource in self.resources.items():
+            if isinstance(resource,
+                          list): # checkouts!
+                continue
+            self.draw_availability_bar(resource, (xmid, ymid), total_width=self.window_size[0] - 2 * self.margin, total_height=height)
 
-    def display_checkout(self):
-        # TODO: fill in
-        pass
+            ymid += height + self.margin
+
+        for r in self.resources['checkout']:
+            self.draw_availability_bar(r, (xmid, ymid),
+                                       total_width=self.window_size[0] - 2 * self.margin, total_height=height)
+
+            ymid += height + self.margin
+
+
+    def draw_availability_bar(self, resource, midpoint, total_width=None, total_height = None):
+        """
+        Draw an availability bar (can be both positive and negative, relative to midpoint)
+        """
+        if total_width is None:
+            total_width = self.window_size[0] - 2 * self.margin
+
+        if total_height is None:
+            total_height = self.window_size[1]/10 # arbitrary
+
+
+        current_availability = resource.capacity - self.get_queue_length(resource)
+
+        rect_width = total_width / 2 * (1 - np.exp(- abs(current_availability) / resource.capacity * 5)) # arbitrary
+        xrect = midpoint[0] if current_availability > 0 else midpoint[0] - rect_width
+        yrect = midpoint[1]
+
+        availtext = self.availabilityfont.render('{} availability: {}'.format(resource.name, current_availability),
+                                              True,
+                                              self.colors['black'], )
+
+        self.window.blit(availtext, (midpoint[0] + self.margin, yrect))
+        _, htext = availtext.get_size()
+
+        bar_height = max(total_height - htext, 1) # don't go lower than one pixel
+
+        rect = pygame.Rect((xrect, yrect + htext), (rect_width, bar_height))
+        if current_availability > 0:
+            _ = pygame.draw.rect(self.window, self.colors['green'], rect)
+        else:
+            _ = pygame.draw.rect(self.window, self.colors['red'], rect)
 
 
 if __name__ == "__main__":
