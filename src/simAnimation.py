@@ -5,7 +5,7 @@ import numpy as np
 
 
 
-class simAnimation():
+class SimAnimation():
     def __init__(self, sim, run_index=0, window_size=(800, 600), fps = 24, timestep_sim_seconds = 1):
         self.sim = sim
         self._run_index = run_index
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     # initialize simulation
     ms = Simulation(config, runs=1, overwrite_print=False)
     ms.run()
-    sa = simAnimation(ms, timestep_sim_seconds=60, fps=24)
+    sa = SimAnimation(ms, timestep_sim_seconds=60, fps=24)
     sa.run()
 
 
