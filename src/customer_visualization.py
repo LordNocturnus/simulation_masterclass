@@ -1,5 +1,6 @@
 import pygame as pg
 import numpy as np
+import datetime
 
 class Visualization:
 
@@ -17,6 +18,8 @@ class Visualization:
         self.surface = pg.surface.Surface(self.window_size, pg.SRCALPHA)
         pg.display.set_caption('Customer position visualization')
 
+        self.font = pg.font.SysFont('Arial', 20)
+
         self.black = np.asarray((1, 1, 1))
         self.red = np.asarray((255, 1, 1))
         self.green = np.asarray((1, 255, 1))
@@ -27,17 +30,19 @@ class Visualization:
         self.ended = False
 
     def run(self, env):
+        # run as part of the simpy simulation to "synchronize" the clocks
         while not self.ended:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.ended = True
             self.surface.fill(self.black)
             self.draw_store()
-            self.draw_customers()
+            self.draw_clock(env)
+            self.draw_customers(env)
 
             self.gameDisplay.blit(self.surface, self.surface.get_rect())
             pg.display.update()
-            yield env.timeout(1)
+            yield env.timeout(5)
             self.clock.tick(30)
         pg.quit()
 
@@ -49,7 +54,18 @@ class Visualization:
             for shelf in department.shelves:
                 pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
 
-    def draw_customers(self):
+    def draw_customers(self, env):
+        customer_in_store = False
         for c in self.customer_factory.customers:
             if c.draw:
+                customer_in_store = True
                 pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)
+        if env.now >= 12.25 * 3600 and not customer_in_store:
+            # no more customers in the store terminate
+            # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization
+            self.ended = True
+
+
+    def draw_clock(self, env):
+        self.surface.blit(self.font.render(str(datetime.timedelta(seconds=8 * 3600 + env.now)), True, self.white), (0, 0) )
+
