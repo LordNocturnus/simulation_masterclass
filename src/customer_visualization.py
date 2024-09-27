@@ -1,0 +1,71 @@
+import pygame as pg
+import numpy as np
+import datetime
+
+class Visualization:
+
+    def __init__(self, store, customer_factory, env, scale, margin=0.1):
+        self.store = store
+        self.customer_factory = customer_factory
+        self.env = env
+        self.scale = scale
+        self.margin = margin
+
+        pg.init()
+        self.window_size = np.asarray([800, 600])
+
+        self.gameDisplay = pg.display.set_mode(self.window_size)
+        self.surface = pg.surface.Surface(self.window_size, pg.SRCALPHA)
+        pg.display.set_caption('Customer position visualization')
+
+        self.font = pg.font.SysFont('Arial', 20)
+
+        self.black = np.asarray((1, 1, 1))
+        self.red = np.asarray((255, 1, 1))
+        self.green = np.asarray((1, 255, 1))
+        self.blue = np.asarray((1, 1, 255))
+        self.white = np.asarray((255, 255, 255))
+
+        self.clock = pg.time.Clock()
+        self.ended = False
+
+    def run(self, env):
+        # run as part of the simpy simulation to "synchronize" the clocks
+        while not self.ended:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.ended = True
+            self.surface.fill(self.black)
+            self.draw_store()
+            self.draw_clock(env)
+            self.draw_customers(env)
+
+            self.gameDisplay.blit(self.surface, self.surface.get_rect())
+            pg.display.update()
+            yield env.timeout(5)
+            self.clock.tick(30)
+        pg.quit()
+
+    def scale_point(self, point):
+        return self.window_size * self.margin + point * self.window_size / self.scale * (1 - 2 * self.margin)
+
+    def draw_store(self):
+        for department in self.store.departments.values():
+            for shelf in department.shelves:
+                pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
+
+    def draw_customers(self, env):
+        customer_in_store = False
+        for c in self.customer_factory.customers:
+            if c.draw:
+                customer_in_store = True
+                pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)
+        if env.now >= 12.25 * 3600 and not customer_in_store:
+            # no more customers in the store terminate
+            # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization
+            self.ended = True
+
+
+    def draw_clock(self, env):
+        self.surface.blit(self.font.render(str(datetime.timedelta(seconds=8 * 3600 + env.now)), True, self.white), (0, 0) )
+

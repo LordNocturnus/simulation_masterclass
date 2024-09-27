@@ -9,7 +9,8 @@ from scipy.signal import savgol_filter
 
 from src.TracedResource import TracedResource
 from src.customer_factory import CustomerFactory
-from src.department import Department
+from src.customer_visualization import Visualization
+from src.store import Store
 from src.plotting import plot_average
 
 
@@ -19,7 +20,7 @@ class Simulation:
     the class stores simulation results for postprocessing
     """
 
-    def __init__(self, config, runs=1, overwrite_print = None):
+    def __init__(self, config, runs=1, overwrite_print = None, visualization=False):
         self.runs = runs
 
         if isinstance(config, dict):
@@ -32,6 +33,9 @@ class Simulation:
             if isinstance(overwrite_print, bool):
                 self.config["Customer"]["flags"]["print"] = overwrite_print
 
+        self.visualization = visualization
+
+
         self.resourceLog = []
         self.customerLog = []
         self.departmentLog = []
@@ -43,16 +47,7 @@ class Simulation:
         for run in range(self.runs):
             env = simpy.Environment()
 
-            departments = dict()
-            departments["A"] = Department("A - Fruit & Vegetables", env)
-            departments["B"] = Department("B - Meat & Fish", env)
-            departments["C"] = Department("C - Bread", env, self.config["resource quantities"]["bread clerks"],
-                                          self.config["Customer"]["stochastics"]["bread_vars"])
-            departments["D"] = Department("D - Cheese", env, self.config["resource quantities"]["cheese clerks"],
-                                          self.config["Customer"]["stochastics"]["cheese_vars"])
-            departments["E"] = Department("E - Canned & packed food", env)
-            departments["F"] = Department("F - Frozen food", env)
-            departments["G"] = Department("G - Drinks", env)
+            store = Store(env, self.config)
 
             # initialize shared resources
             resources = dict()
@@ -65,14 +60,17 @@ class Simulation:
             resources["checkout"] = [
                 TracedResource(env, capacity=1, name=f"Checkout {i}") for i in range(self.config["resource quantities"]["checkouts"])
             ]
-            resources["C"] = departments["C"].queue
-            resources["D"] = departments["D"].queue
+            resources["C"] = store.departments["C"].queue
+            resources["D"] = store.departments["D"].queue
 
             self.departmentLog.append(departments)
 
             # initialize the customer factory, SEED EQUAL TO THE RUN INDEX
-            customer_factory = CustomerFactory(env, self.config, departments, resources, seed=run)
+            customer_factory = CustomerFactory(env, self.config, store, resources, seed=run)
             customer_factory.run()
+
+            visualization = Visualization(store, customer_factory, env, np.asarray([40.0, 30.0]))
+            env.process(visualization.run(env))
 
             # run simulation
             env.run()
