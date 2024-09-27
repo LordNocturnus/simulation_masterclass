@@ -51,4 +51,5 @@ class Visualization:
 
     def draw_customers(self):
         for c in self.customer_factory.customers:
-            pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)
+            if c.draw:
+                pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)

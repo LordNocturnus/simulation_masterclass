@@ -32,8 +32,9 @@ class Customer:
         self.walking = False
         self.walking_start_time = 0.0
         self.walking_direction = np.zeros(2, dtype=np.float64)
-
         self._pos = np.zeros(2, dtype=np.float64)
+
+        self.draw = False
 
         self.action = self.env.process(self.run())
 
@@ -66,6 +67,10 @@ class Customer:
     def run(self):
         # wait to enter the store
         yield self.env.timeout(self.start_time)
+
+        # customer has entered the store so we start drawing it
+        self.draw = True
+        self._pos = self.store.path_grid.nodes[0].pos
 
         # choose basket or cart to pick at the entrance
         if self.basket:
@@ -156,3 +161,6 @@ class Customer:
 
         self.use_times["container"] = self.env.now - container_use
         self.store_time = self.env.now - self.start_time
+
+        # customer has left the store so we stop drawing it
+        self.draw = False
