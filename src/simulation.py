@@ -63,7 +63,7 @@ class Simulation:
             resources["C"] = store.departments["C"].queue
             resources["D"] = store.departments["D"].queue
 
-            self.departmentLog.append(departments)
+            self.departmentLog.append(store.departments)
 
             # initialize the customer factory, SEED EQUAL TO THE RUN INDEX
             customer_factory = CustomerFactory(env, self.config, store, resources, seed=run)

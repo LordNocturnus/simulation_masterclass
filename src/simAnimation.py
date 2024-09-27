@@ -5,7 +5,8 @@ import numpy as np
 
 
 
-class SimAnimation():
+class SimAnimation:
+
     def __init__(self, sim, run_index=0, window_size=(800, 600),
                  fps = 24, timestep_sim_seconds = 1):
         self.sim = sim
