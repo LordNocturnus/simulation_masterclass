@@ -20,12 +20,12 @@ with open(config_path) as config_p:  # if it's a path, read the file
     config = json.load(config_p)
 
 #initialize simulation
-ms = Simulation(config, runs=3, overwrite_print=False, visualization=False)
+ms = Simulation(config, runs=1, overwrite_print=False, visualization=True)
 
 ms.run()#"""
 
-sa = SimAnimation(ms, timestep_sim_seconds=60, fps=30, window_size=(1080, 720))
-sa.run()
+#sa = SimAnimation(ms, timestep_sim_seconds=60, fps=30, window_size=(1080, 720))
+#sa.run()
 
 # show results
 ms.print_all_resource_uses()

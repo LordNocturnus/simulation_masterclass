@@ -153,9 +153,126 @@ class Store:
         self.path_grid.add_edge(25, 26)
         self.path_grid.add_node(np.asarray([339.5, 957])) # 27
         self.path_grid.add_edge(26, 27)
-        self.path_grid.add_edge(7, 27)
+        self.path_grid.add_edge(8, 27)
         self.path_grid.add_node(np.asarray([316.5, 957])) # 28
         self.path_grid.add_edge(27, 28)
+        self.path_grid.add_node(np.asarray([316.5, 262.5])) # 29
+        self.path_grid.add_edge(28, 29)
+        self.path_grid.add_node(np.asarray([0, 262.5])) # 30
+        self.path_grid.add_edge(29, 30)
+        self.path_grid.add_node(np.asarray([316.5, 112.5])) # 31
+        self.path_grid.add_edge(29, 31)
+        self.path_grid.add_node(np.asarray([316.5, 110])) # 32
+        self.path_grid.add_edge(31, 32)
+        self.path_grid.add_node(np.asarray([0.0, 110])) # 33
+        self.path_grid.add_edge(32, 33)
+        self.path_grid.add_node(np.asarray([469, 112.5])) # 34
+        self.path_grid.add_edge(31, 34)
+        self.path_grid.add_edge(26, 34)
+        self.path_grid.add_node(np.asarray([622, 112.5])) # 35
+        self.path_grid.add_edge(34, 35)
+        self.path_grid.add_edge(25, 35)
+        self.path_grid.add_node(np.asarray([775, 112.5])) # 36
+        self.path_grid.add_edge(35, 36)
+        self.path_grid.add_edge(24, 36)
+        self.path_grid.add_node(np.asarray([922.5, 112.5])) # 37
+        self.path_grid.add_edge(36, 37)
+        self.path_grid.add_edge(22, 37)
+        self.path_grid.add_node(np.asarray([1070, 112.5])) # 38
+        self.path_grid.add_edge(37, 38)
+        self.path_grid.add_edge(21, 38)
+        self.path_grid.add_node(np.asarray([1223, 112.5])) # 39
+        self.path_grid.add_edge(38, 39)
+        self.path_grid.add_edge(20, 39)
+        self.path_grid.add_node(np.asarray([1375.5, 112.5])) # 40
+        self.path_grid.add_edge(39, 40)
+        self.path_grid.add_edge(18, 40)
+        self.path_grid.add_node(np.asarray([1523, 112.5])) # 41
+        self.path_grid.add_edge(40, 41)
+        self.path_grid.add_edge(17, 41)
+        self.path_grid.add_node(np.asarray([1671, 112.5])) # 42
+        self.path_grid.add_edge(41, 42)
+        self.path_grid.add_edge(16, 42)
+        self.path_grid.add_node(np.asarray([1849, 112.5])) # 43
+        self.path_grid.add_edge(42, 43)
+        self.path_grid.add_node(np.asarray([1849, 440.5])) # 44
+        self.path_grid.add_edge(15, 44)
+        self.path_grid.add_node(np.asarray([1849, 366])) # 45
+        self.path_grid.add_edge(43, 45)
+        self.path_grid.add_edge(44, 45)
+        self.path_grid.add_node(np.asarray([1989.5, 112.5])) # 46
+        self.path_grid.add_edge(43, 46)
+        self.path_grid.add_edge(45, 46)
+        self.path_grid.add_node(np.asarray([2031.5, 39])) # 47
+        self.path_grid.add_edge(46, 47)
+        self.path_grid.add_node(np.asarray([2224, 39])) # 48
+        self.path_grid.add_edge(47, 48)
+        self.path_grid.add_node(np.asarray([2389.5, 39])) # 49
+        self.path_grid.add_edge(48, 49)
+        self.path_grid.add_node(np.asarray([2551.5, 39])) # 50
+        self.path_grid.add_edge(49, 50)
+        self.path_grid.add_node(np.asarray([2713.5, 39])) # 51
+        self.path_grid.add_edge(50, 51)
+        self.path_grid.add_node(np.asarray([1992, 440.5])) # 52
+        self.path_grid.add_edge(44, 52)
+        self.path_grid.add_edge(48, 52)
+        self.path_grid.add_node(np.asarray([2027, 440.5])) # 53
+        self.path_grid.add_edge(52, 53)
+        self.path_grid.add_node(np.asarray([2158, 440.5])) # 54
+        self.path_grid.add_edge(49, 54)
+        self.path_grid.add_edge(53, 54)
+        self.path_grid.add_node(np.asarray([2185, 440.5])) # 55
+        self.path_grid.add_edge(54, 55)
+        self.path_grid.add_node(np.asarray([2319.5, 440.5])) # 56
+        self.path_grid.add_edge(50, 56)
+        self.path_grid.add_edge(55, 56)
+        self.path_grid.add_node(np.asarray([2343, 440.5])) # 57
+        self.path_grid.add_edge(56, 57)
+        self.path_grid.add_node(np.asarray([2481, 440.5])) # 58
+        self.path_grid.add_edge(51, 58)
+        self.path_grid.add_edge(57, 58)
+        self.path_grid.add_node(np.asarray([2506, 440.5])) # 59
+        self.path_grid.add_edge(58, 59)
+        self.path_grid.add_node(np.asarray([2668.5, 440.5])) # 60
+        self.path_grid.add_edge(59, 60)
+        self.path_grid.add_node(np.asarray([2780, 246])) # 61
+        self.path_grid.add_edge(60, 61)
+        self.path_grid.add_node(np.asarray([2027, 1084])) # 62
+        self.path_grid.add_edge(13, 62)
+        self.path_grid.add_edge(53, 62)
+        self.path_grid.add_node(np.asarray([2032, 1084])) # 63
+        self.path_grid.add_edge(62, 63)
+        self.path_grid.add_node(np.asarray([2185, 1084])) # 64
+        self.path_grid.add_edge(55, 64)
+        self.path_grid.add_edge(63, 64)
+        self.path_grid.add_node(np.asarray([2190, 1084])) # 65
+        self.path_grid.add_edge(64, 65)
+        self.path_grid.add_node(np.asarray([2343, 1084])) # 66
+        self.path_grid.add_edge(57, 66)
+        self.path_grid.add_edge(65, 66)
+        self.path_grid.add_node(np.asarray([2506, 1084])) # 67
+        self.path_grid.add_edge(59, 67)
+        self.path_grid.add_edge(66, 67)
+        self.path_grid.add_node(np.asarray([2516, 1084])) # 68
+        self.path_grid.add_edge(67, 68)
+        self.path_grid.add_node(np.asarray([2668.5, 1084])) # 69
+        self.path_grid.add_edge(60, 69)
+        self.path_grid.add_edge(68, 69)
+        self.path_grid.add_node(np.asarray([2671.5, 1084])) # 70
+        self.path_grid.add_edge(69, 70)
+        self.path_grid.add_node(np.asarray([2032, 1577])) # 71
+        self.path_grid.add_edge(63, 71, False)
+        self.path_grid.add_node(np.asarray([2190, 1577])) # 72
+        self.path_grid.add_edge(65, 72, False)
+        self.path_grid.add_node(np.asarray([2516, 1577])) # 73
+        self.path_grid.add_edge(68, 73, False)
+        self.path_grid.add_node(np.asarray([2671.5, 1577])) # 74
+        self.path_grid.add_edge(70, 74, False)
+        self.path_grid.add_node(np.asarray([2343, 1730])) # 75
+        self.path_grid.add_edge(71, 75, False)
+        self.path_grid.add_edge(72, 75, False)
+        self.path_grid.add_edge(73, 75, False)
+        self.path_grid.add_edge(74, 75, False)
 
         self.scale(np.asarray([2780.0, 1730.0]), np.asarray([40.0, 30.0]))
 
@@ -166,6 +283,9 @@ class Store:
 
         self.path_grid.scale(old, new)
 
+    def get_closest_edge(self, point):
+        return self.path_grid.get_closest_edge(point)
+
     def plot(self):
         for department in self.departments.values():
             for shelf in department.shelves:
@@ -173,6 +293,9 @@ class Store:
 
         for edge in self.path_grid.edges:
             plt.plot([edge.start.pos[0], edge.end.pos[0]], [-edge.start.pos[1], -edge.end.pos[1]], color="b",
-                     marker="x")
+                     marker="x", alpha=0.5)
+            if edge.bidirectional:
+                plt.plot([edge.end.pos[0], edge.start.pos[0]], [-edge.end.pos[1], -edge.start.pos[1]], color="b",
+                         marker="x", alpha=0.5)
 
         plt.show()
