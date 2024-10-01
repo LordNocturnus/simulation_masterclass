@@ -48,6 +48,7 @@ class Simulation:
             env = simpy.Environment()
 
             store = Store(env, self.config)
+            store.plot()
 
             # initialize shared resources
             resources = dict()
@@ -69,8 +70,9 @@ class Simulation:
             customer_factory = CustomerFactory(env, self.config, store, resources, seed=run)
             customer_factory.run()
 
-            visualization = Visualization(store, customer_factory, env, np.asarray([40.0, 30.0]))
-            env.process(visualization.run(env))
+            if self.visualization:
+                visualization = Visualization(store, customer_factory, env, np.asarray([40.0, 30.0]))
+                env.process(visualization.run(env))
 
             # run simulation
             env.run()

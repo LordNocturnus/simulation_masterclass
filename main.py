@@ -20,7 +20,7 @@ with open(config_path) as config_p:  # if it's a path, read the file
     config = json.load(config_p)
 
 #initialize simulation
-ms = Simulation(config, runs=3, overwrite_print=False, visualization=True)
+ms = Simulation(config, runs=3, overwrite_print=False, visualization=False)
 
 ms.run()#"""
 
@@ -34,7 +34,6 @@ ms.plot_availability("shopping_carts", save=True)
 ms.plot_store_time_vs_start_time(save=True)
 ms.plot_availability("C", save=True)
 ms.plot_store_time_histogram(n_bins=100, save=True)
-
 
 
 

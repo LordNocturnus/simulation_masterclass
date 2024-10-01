@@ -14,6 +14,8 @@ class Visualization:
         pg.init()
         self.window_size = np.asarray([800, 600])
 
+        self.image = pg.transform.scale(pg.image.load('blankstore.png'), self.window_size * (1 - 2 * margin))
+
         self.gameDisplay = pg.display.set_mode(self.window_size)
         self.surface = pg.surface.Surface(self.window_size, pg.SRCALPHA)
         pg.display.set_caption('Customer position visualization')
@@ -50,6 +52,7 @@ class Visualization:
         return self.window_size * self.margin + point * self.window_size / self.scale * (1 - 2 * self.margin)
 
     def draw_store(self):
+        self.surface.blit(self.image, (self.scale_point(0.0), self.scale_point(0.0)))
         for department in self.store.departments.values():
             for shelf in department.shelves:
                 pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
