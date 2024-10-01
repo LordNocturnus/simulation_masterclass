@@ -48,7 +48,7 @@ class Simulation:
             env = simpy.Environment()
 
             store = Store(env, self.config)
-            store.plot()
+            #store.plot()
 
             # initialize shared resources
             resources = dict()

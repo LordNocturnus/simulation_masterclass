@@ -17,6 +17,8 @@ class PathGrid:
     def scale(self, old, new):
         for node in self.nodes:
             node.scale(old, new)
+        for edge in self.edges:
+            edge.scale()
 
     def dijkstra(self, start, goal):
         """
@@ -74,9 +76,9 @@ class PathGrid:
         for e, edge in enumerate(self.edges):
             proj[e] = np.dot(point - edge.start.pos, edge.vec) / edge.length
             if proj[e] < 0.0 or proj[e] > edge.length:
-                dist[e] = min(np.linalg.norm(point - edge.start.pos), np.linalg.norm(point - edge.end.pos))
+                dist[e] = min(np.sum(np.square(point - edge.start.pos)), np.sum(np.square(point - edge.end.pos)))
                 continue
-            dist[e] = np.linalg.norm(np.cross(point - edge.start.pos, edge.vec)) / edge.length
+            dist[e] = np.sum(np.square(np.cross(point - edge.start.pos, edge.vec))) / edge.length ** 2
         if len(dist[dist < 1e9]) == 0:
             raise ValueError("Something is very wrong")
         return self.edges[np.argmin(dist)]
@@ -102,23 +104,19 @@ class PathEdge:
         self.end = end
         self.bidirectional = bidirectional
 
+        self.vec = self.end.pos - self.start.pos
+        self.length = np.linalg.norm(self.vec)
+        self.direction = self.vec / self.length
+
         if end.unid not in start.connected_to:
             start.connected_to.append(end.unid)
         self.start.outgoing_edges.append(self)
         self.end.incoming_edges.append(self)
 
-    @property
-    def vec(self):
-        return self.end.pos - self.start.pos
-
-    @property
-    def length(self):
-        return np.linalg.norm(self.vec)
-
-    @property
-    def direction(self):
-        return self.vec / self.length
-
+    def scale(self):
+        self.vec = self.end.pos - self.start.pos
+        self.length = np.linalg.norm(self.vec)
+        self.direction = self.vec / self.length
 
 class DijkstraNode:
 
