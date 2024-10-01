@@ -44,8 +44,9 @@ class Visualization:
 
             self.gameDisplay.blit(self.surface, self.surface.get_rect())
             pg.display.update()
-            yield env.timeout(5)
-            self.clock.tick(30)
+            yield env.timeout(10)
+            self.clock.tick(60)
+            print(self.clock.get_fps())
         pg.quit()
 
     def scale_point(self, point):
@@ -56,6 +57,12 @@ class Visualization:
         for department in self.store.departments.values():
             for shelf in department.shelves:
                 pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
+        for edge in self.store.path_grid.edges:
+            pg.draw.line(self.surface, self.green, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
+        #edge = self.store.path_grid.edges[0]
+        #pg.draw.line(self.surface, self.black, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
+        #edge = self.store.path_grid.edges[8]
+        #pg.draw.line(self.surface, self.black, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
 
     def draw_customers(self, env):
         customer_in_store = False
@@ -63,6 +70,8 @@ class Visualization:
             if c.draw:
                 customer_in_store = True
                 pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)
+                #if c.ucid == 14:
+                #    pg.draw.circle(self.surface, self.black, self.scale_point(c.pos), 10)
         if env.now >= 12.25 * 3600 and not customer_in_store:
             # no more customers in the store terminate
             # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization

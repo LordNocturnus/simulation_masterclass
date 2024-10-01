@@ -33,6 +33,7 @@ class Customer:
         self.walking_start_time = 0.0
         self.walking_direction = np.zeros(2, dtype=np.float64)
         self._pos = np.zeros(2, dtype=np.float64)
+        self.on_node = None # None if not on a node otherwise equal to node id
 
         self.draw = False
 
@@ -68,6 +69,31 @@ class Customer:
         # only update location after arrival not during walking
         self._pos = destination
 
+    def path_to(self, destination):
+        """
+        path to the given destination.
+        destination can be a position or index of a node in the path grid
+        :param destination:
+        :return:
+        """
+        if self.on_node is None:
+            path = self.store.path_grid.dijkstra(self.pos, destination)
+        else:
+            path = self.store.path_grid.dijkstra(self.on_node, destination)
+
+        if not isinstance(destination, int):
+            path = path[:-1]
+
+        for node in path:
+            yield self.env.process(self.walk(self.store.path_grid.nodes[node].pos))
+            self.on_node = node
+
+        if not isinstance(destination, int):
+            yield self.env.process(self.walk(destination))
+            self.on_node = None
+
+
+
     # MAIN CUSTOMER ROUTINE FUNCTION
     def run(self):
         # wait to enter the store
@@ -76,6 +102,7 @@ class Customer:
         # customer has entered the store so we start drawing it
         self.draw = True
         self._pos = self.store.path_grid.nodes[0].pos
+        self.on_node = 0
 
         # choose basket or cart to pick at the entrance
         if self.basket:
@@ -85,7 +112,8 @@ class Customer:
 
         with container.request() as container_request:
             container_wait = self.env.now
-            yield container_request
+            yield container_request & self.env.process(self.path_to(1))
+            self.on_node = 1
             self.wait_times["container"] = self.env.now - container_wait
             container_use = self.env.now
 
@@ -118,7 +146,7 @@ class Customer:
                         if self.flags["print"]:
                             print('{:.2f}: {} walking from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
                                 self.env.now, self.ucid, self.pos[0], self.pos[1], item_pos[0], item_pos[1]))
-                        walking = self.env.process(self.walk(item_pos))
+                        walking = self.env.process(self.path_to(item_pos))
                         yield walking
 
                         if self.flags["print"]:
