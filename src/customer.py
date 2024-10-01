@@ -34,6 +34,7 @@ class Customer:
         self.walking_direction = np.zeros(2, dtype=np.float64)
         self._pos = np.zeros(2, dtype=np.float64)
         self.on_node = None # None if not on a node otherwise equal to node id
+        self.current_department_id = None
 
         self.draw = False
 
@@ -69,7 +70,7 @@ class Customer:
         # only update location after arrival not during walking
         self._pos = destination
 
-    def path_to(self, destination):
+    def path_to(self, destination, dep=None):
         """
         path to the given destination.
         destination can be a position or index of a node in the path grid
@@ -77,9 +78,9 @@ class Customer:
         :return:
         """
         if self.on_node is None:
-            path = self.store.path_grid.dijkstra(self.pos, destination)
+            path = self.store.path_grid.dijkstra(self.pos, destination, self.current_department_id, dep)
         else:
-            path = self.store.path_grid.dijkstra(self.on_node, destination)
+            path = self.store.path_grid.dijkstra(self.on_node, destination, self.current_department_id, dep)
 
         if not isinstance(destination, int):
             path = path[:-1]
@@ -91,6 +92,7 @@ class Customer:
         if not isinstance(destination, int):
             yield self.env.process(self.walk(destination))
             self.on_node = None
+        self.current_department_id = dep
 
 
 
@@ -146,7 +148,7 @@ class Customer:
                         if self.flags["print"]:
                             print('{:.2f}: {} walking from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
                                 self.env.now, self.ucid, self.pos[0], self.pos[1], item_pos[0], item_pos[1]))
-                        walking = self.env.process(self.path_to(item_pos))
+                        walking = self.env.process(self.path_to(item_pos, department_id))
                         yield walking
 
                         if self.flags["print"]:
