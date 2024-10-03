@@ -35,8 +35,7 @@ class Customer:
         self._pos = np.zeros(2, dtype=np.float64)
         self.on_node = None # None if not on a node otherwise equal to node id
         self.current_department_id = None
-        self.closest_edge = None # closets edge to the current position
-        self.reserved_edge = None
+        self.reserved_edge = None # tuple of the reserved edge for carts and the simpy request object or None
 
         self.draw = False
         self.color = (0, 0, 255)
@@ -91,6 +90,7 @@ class Customer:
             if not self.basket and self.on_node is not None:
                 edge = node.incoming_edges[self.on_node]
                 if edge.blockage is not None:
+                    # customer with a cart requests to use the edge to move to their destination
                     req = edge.blockage.request()
                     self.reserved_edge = (edge, req)
                     self.color = (255, 0, 0)
@@ -98,14 +98,17 @@ class Customer:
                     self.color = (0, 0, 255)
             yield self.env.process(self.walk(node.pos))
             if self.reserved_edge is not None:
+                # request is released once customer hase left the edge
                 self.reserved_edge[0].blockage.release(self.reserved_edge[1])
                 self.reserved_edge = None
             self.on_node = node_id
 
         if not isinstance(destination, int):
+            # move to an item location which is not on a static node
             if not self.basket:
                 edge = self.store.path_grid.get_closest_edge(destination, dep)
                 if edge.blockage is not None:
+                    # customer will hold an edge even when collecting an item hence no release here
                     req = edge.blockage.request()
                     self.reserved_edge = (edge, req)
                     self.color = (255, 0, 0)

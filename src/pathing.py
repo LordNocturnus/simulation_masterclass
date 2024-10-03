@@ -83,20 +83,22 @@ class PathGrid:
 
 
     def get_closest_edge(self, point, dep):
+        # find physically closest edge to a given point
         if dep is None:
             edges = self.edges
         else:
             edges = self.sorted_edges[dep]
-        dist = np.zeros(len(edges), np.float64)
+        dist = np.zeros(len(edges), np.float64) # technically dist^2 for calculation efficiency
         proj = np.zeros(len(edges), np.float64)
         for e, edge in enumerate(edges):
             proj[e] = np.dot(point - edge.start.pos, edge.vec) / edge.length
             if proj[e] < 0.0 or proj[e] > edge.length:
+                # anchorpoint for normal between point and edge lies outside of edge change calculation to distance from
+                # start or end point whichever is shorter
                 dist[e] = min(np.sum(np.square(point - edge.start.pos)), np.sum(np.square(point - edge.end.pos)))
                 continue
             dist[e] = np.sum(np.square(np.cross(point - edge.start.pos, edge.vec))) / edge.length ** 2
-        if len(dist[dist < 1e9]) == 0:
-            raise ValueError("Something is very wrong")
+
         return edges[np.argmin(dist)]
 
 class PathNode(object):
