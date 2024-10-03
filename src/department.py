@@ -6,7 +6,7 @@ import numpy as np
 
 class Department:
 
-    def __init__(self, name, env, queue=None, times=None, shelves=[]):
+    def __init__(self, name, env, queue=None, times=None, node=None, shelves=[]):
         self.name = name
         self.env = env
 
@@ -14,7 +14,7 @@ class Department:
         self.log_time = []
 
         if queue is not None and times is not None:
-            self.queue = TracedResource(env, capacity=queue, name=name)
+            self.queue = TracedResource(env, capacity=queue, name=name, accociated_node=node)
             self.rv = truncnorm(-4, 4, loc=times[0], scale=times[1])
         else:
             self.queue = None

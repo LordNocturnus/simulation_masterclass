@@ -1,5 +1,6 @@
 {
   "Customer": {
+    "size": 0.5,
     "arrivals": [
       [0, 30],
       [3600, 80],
@@ -47,7 +48,6 @@
     "shopping_carts" : 45,
     "baskets" : 300,
     "bread clerks" : 4,
-    "cheese clerks" : 3,
-    "checkouts" : 4
+    "cheese clerks" : 3
   }
 }

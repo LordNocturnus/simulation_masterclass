@@ -6,27 +6,31 @@ import numpy as np
 
 class TracedResource(Resource):
 
-    def __init__(self, env, capacity, name="Unnamed Resource"):
+    def __init__(self, env, capacity, name="Unnamed Resource", accociated_node=None):
         super().__init__(env, capacity)
         self.env = env
         self.name = name
+        self.node = accociated_node
 
         self.log_event = []
         self.log_time = []
 
-        self.queueLog = []
-        self.capacityLog = []
-        self.demandLog = []
+        self.customer_queue = [] # custom queue for finding customer information in the queue
+
         self.ucids = set({})
 
-    def request(self):
+    def request(self, customer=None):
         self.log_event.append(1)
         self.log_time.append(self.env.now)
+        if customer is not None:
+            self.customer_queue.append(customer)
         return super().request()
 
     def release(self, request):
         self.log_event.append(-1)
         self.log_time.append(self.env.now)
+        if len(self.customer_queue) > 0:
+            self.customer_queue.pop(0)
         return super().release(request)
 
     def availability(self):

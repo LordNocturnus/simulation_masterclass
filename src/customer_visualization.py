@@ -45,9 +45,9 @@ class Visualization:
 
             self.gameDisplay.blit(self.surface, self.surface.get_rect())
             pg.display.update()
-            yield env.timeout(60)
+            yield env.timeout(10)
             self.clock.tick(60)
-            print(self.clock.get_fps())
+            #print(self.clock.get_fps())
         pg.quit()
 
     def scale_point(self, point):
@@ -58,11 +58,13 @@ class Visualization:
         for department in self.store.departments.values():
             for shelf in department.shelves:
                 pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
+        for edge in self.store.path_grid.edges:
+            pg.draw.line(self.surface, self.green, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
 
     def draw_customers(self, env):
         customer_in_store = False
         for c in self.customer_factory.customers:
-            if c.draw:
+            if c.draw: # and c.ucid == 14:
                 customer_in_store = True
                 if c.basket:
                     pg.draw.circle(self.surface, c.color, self.scale_point(c.pos), self.customer_size)

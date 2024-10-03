@@ -54,12 +54,12 @@ class CustomerFactory:
                 ucid +=1
 
     def create_customer(self, hour, ucid) -> Customer:
-        t = self.rng.uniform(self.config["arrivals"][hour][0], self.config["arrivals"][hour + 1][0], 1)[0]
+        t = self.rng.uniform(self.config["arrivals"][hour][0], self.config["arrivals"][hour + 1][0])
         shopping_list = {}
         for dep in self.shopping_list.keys():
             shopping_list[dep] = int(self.rng.choice(self.shopping_list[dep]["items"],
                                                      p=self.shopping_list[dep]["probabilities"]))
-        basket = bool(self.rng.binomial(1, self.config["basket"], 10)[0])
+        basket = bool(self.rng.binomial(1, self.config["basket"]))
         route = self.rng.choice(self.routes, p=self.route_probabilities)
         seed = self.rng.integers(0, sys.maxsize)
 
@@ -72,7 +72,7 @@ class CustomerFactory:
                                                 self.config["stochastics"]["walking_cart"][2],) / 3.6
 
         return Customer(self.env, self.config["stochastics"], self.store, self.resources, self.config["flags"],
-                        shopping_list, basket, route, t, walking_speed, ucid, seed)
+                        shopping_list, basket, route, t, walking_speed, self.config["size"], ucid, seed)
 
     def wait_times(self, key):
         if key == "baskets":

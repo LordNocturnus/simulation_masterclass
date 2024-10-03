@@ -54,12 +54,16 @@ class Simulation:
             resources = dict()
             resources["shopping_carts"] = TracedResource(env,
                                                          capacity=self.config["resource quantities"]["shopping_carts"],
-                                                         name="Shopping carts")
+                                                         name="Shopping carts",
+                                                         accociated_node=store.path_grid.nodes[1])
             resources["baskets"] = TracedResource(env, capacity=self.config["resource quantities"]["baskets"],
-                                                  name="Baskets")
+                                                  name="Baskets", accociated_node=store.path_grid.nodes[1])
 
             resources["checkout"] = [
-                TracedResource(env, capacity=1, name=f"Checkout {i}") for i in range(self.config["resource quantities"]["checkouts"])
+                TracedResource(env, capacity=1, name="Checkout 0", accociated_node=store.path_grid.nodes[71]),
+                TracedResource(env, capacity=1, name="Checkout 1", accociated_node=store.path_grid.nodes[72]),
+                TracedResource(env, capacity=1, name="Checkout 2", accociated_node=store.path_grid.nodes[73]),
+                TracedResource(env, capacity=1, name="Checkout 3", accociated_node=store.path_grid.nodes[74])
             ]
             resources["C"] = store.departments["C"].queue
             resources["D"] = store.departments["D"].queue

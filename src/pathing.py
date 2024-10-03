@@ -49,8 +49,7 @@ class PathGrid:
         else:
             edge = self.get_closest_edge(start, dep_0)
             matrix[-2, edge.end.unid] = np.linalg.norm(edge.end.pos - start)
-            if edge.bidirectional:
-                matrix[-2, edge.start.unid] = np.linalg.norm(edge.start.pos - start)
+            matrix[-2, edge.start.unid] = np.linalg.norm(edge.start.pos - start)
             start_id = len(matrix) - 2
 
         if isinstance(goal, int):
@@ -58,8 +57,7 @@ class PathGrid:
         else:
             edge = self.get_closest_edge(goal, dep_1)
             matrix[edge.start.unid, -1] = np.linalg.norm(edge.start.pos - goal)
-            if edge.bidirectional:
-                matrix[edge.end.unid, -1] = np.linalg.norm(edge.end.pos - goal)
+            matrix[edge.end.unid, -1] = np.linalg.norm(edge.end.pos - goal)
             goal_id = len(matrix) - 1
 
         nodes = []
