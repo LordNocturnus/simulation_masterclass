@@ -4,12 +4,13 @@ import datetime
 
 class Visualization:
 
-    def __init__(self, store, customer_factory, env, scale, margin=0.1):
+    def __init__(self, store, customer_factory, env, scale, margin=0.1, customer_size=5):
         self.store = store
         self.customer_factory = customer_factory
         self.env = env
         self.scale = scale
         self.margin = margin
+        self.customer_size = customer_size
 
         pg.init()
         self.window_size = np.asarray([800, 600])
@@ -57,15 +58,18 @@ class Visualization:
         for department in self.store.departments.values():
             for shelf in department.shelves:
                 pg.draw.line(self.surface, self.red, self.scale_point(shelf.start), self.scale_point(shelf.end))
-        #for edge in self.store.path_grid.edges:
-        #    pg.draw.line(self.surface, self.green, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
 
     def draw_customers(self, env):
         customer_in_store = False
         for c in self.customer_factory.customers:
             if c.draw:
                 customer_in_store = True
-                pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), 10)
+                if c.basket:
+                    pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), self.customer_size)
+                else:
+                    pg.draw.rect(self.surface, self.blue, (self.scale_point(c.pos)[0] - self.customer_size,
+                                                           self.scale_point(c.pos)[1] - self.customer_size,
+                                                           2 * self.customer_size, 2 * self.customer_size))
         if env.now >= 12.25 * 3600 and not customer_in_store:
             # no more customers in the store terminate
             # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization
