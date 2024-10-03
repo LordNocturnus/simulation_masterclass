@@ -74,8 +74,6 @@ class Customer:
         """
         path to the given destination.
         destination can be a position or index of a node in the path grid
-        :param destination:
-        :return:
         """
         if self.on_node is None:
             path = self.store.path_grid.dijkstra(self.pos, destination, self.current_department_id, dep)
@@ -193,6 +191,14 @@ class Customer:
                                        scale=self.stochastics["scan_vars"][1],
                                        random_state=self.rng.integers(0, 2**32 - 1), size=self.total_items)
                 yield self.env.timeout(np.sum(t_scan))
+
+                # cashier has to ask for price
+                if self.rng.uniform(0.0, 1.0) < 0.05:
+                    yield self.env.timeout(self.rng.exponential(12))
+
+                # cashier has to check payment
+                if self.rng.uniform(0.0, 1.0) < 0.02:
+                    yield self.env.timeout(self.rng.uniform(30, 45))
 
                 if self.flags["print"]:
                     print('{:.2f}: {} pays at checkout'.format(self.env.now, self.ucid))
