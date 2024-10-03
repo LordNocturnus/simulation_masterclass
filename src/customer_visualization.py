@@ -65,9 +65,9 @@ class Visualization:
             if c.draw:
                 customer_in_store = True
                 if c.basket:
-                    pg.draw.circle(self.surface, self.blue, self.scale_point(c.pos), self.customer_size)
+                    pg.draw.circle(self.surface, c.color, self.scale_point(c.pos), self.customer_size)
                 else:
-                    pg.draw.rect(self.surface, self.blue, (self.scale_point(c.pos)[0] - self.customer_size,
+                    pg.draw.rect(self.surface, c.color, (self.scale_point(c.pos)[0] - self.customer_size,
                                                            self.scale_point(c.pos)[1] - self.customer_size,
                                                            2 * self.customer_size, 2 * self.customer_size))
         if env.now >= 12.25 * 3600 and not customer_in_store:

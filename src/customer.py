@@ -37,6 +37,7 @@ class Customer:
         self.current_department_id = None
 
         self.draw = False
+        self.color = (0, 0, 255)
 
         self.action = self.env.process(self.run())
 
@@ -112,7 +113,9 @@ class Customer:
 
         with container.request() as container_request:
             container_wait = self.env.now
+            self.color = (255, 0, 0)
             yield container_request & self.env.process(self.path_to(1))
+            self.color = (0, 0, 255)
             self.on_node = 1
             self.wait_times["container"] = self.env.now - container_wait
             container_use = self.env.now
@@ -132,7 +135,9 @@ class Customer:
                 if current_department.queue is not None:
                     # departments with queue
                     with current_department.queue.request() as department_request:
+                        self.color = (255, 0, 0)
                         yield department_request
+                        self.color = (0, 255, 0)
                         self.wait_times[department_id] = self.env.now - department_wait
                         department_use = self.env.now
                         yield self.env.timeout(current_department.rv.rvs(random_state=self.rng.integers(0, 2**32 - 1)))
@@ -147,8 +152,9 @@ class Customer:
                             print('{:.2f}: {} walking from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
                                 self.env.now, self.ucid, self.pos[0], self.pos[1], item_pos[0], item_pos[1]))
                         walking = self.env.process(self.path_to(item_pos, department_id))
+                        self.color = (0, 0, 255)
                         yield walking
-
+                        self.color = (0, 255, 0)
                         if self.flags["print"]:
                             print('{:.2f}: {} picks up item at ({:.2f},{:.2f})'.format(self.env.now, self.ucid,
                                                                                        item_pos[0], item_pos[1]))
@@ -180,7 +186,9 @@ class Customer:
 
             with checkout.request() as checkout_request:
                 checkout_wait = self.env.now
+                self.color = (255, 0, 0)
                 yield checkout_request
+                self.color = (0, 255, 0)
                 self.wait_times["checkout"] = self.env.now - checkout_wait
                 checkout_use = self.env.now
 
@@ -196,15 +204,15 @@ class Customer:
                 if self.rng.uniform(0.0, 1.0) < 0.05:
                     yield self.env.timeout(self.rng.exponential(12))
 
-                # cashier has to check payment
-                if self.rng.uniform(0.0, 1.0) < 0.02:
-                    yield self.env.timeout(self.rng.uniform(30, 45))
-
                 if self.flags["print"]:
                     print('{:.2f}: {} pays at checkout'.format(self.env.now, self.ucid))
 
                 yield self.env.timeout(self.rng.uniform(self.stochastics["payment_bounds"][0],
                                                         self.stochastics["payment_bounds"][1]))
+
+                # cashier has to check payment
+                if self.rng.uniform(0.0, 1.0) < 0.02:
+                    yield self.env.timeout(self.rng.uniform(30, 45))
 
             self.use_times["checkout"] = self.env.now - checkout_use
 

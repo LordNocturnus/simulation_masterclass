@@ -8,6 +8,7 @@ class PathGrid:
         self.nodes = []
         self.edges = []
         self.sorted_edges = dict()
+        self.matrix = np.zeros((0, 0))
 
     def add_node(self, pos):
         self.nodes.append(PathNode(pos, len(self.nodes)))
@@ -26,17 +27,19 @@ class PathGrid:
             node.scale(old, new)
         for edge in self.edges:
             edge.scale()
+        self.matrix = np.zeros((len(self.nodes), len(self.nodes)))
+        for edge in self.edges:
+            self.matrix[edge.start.unid, edge.end.unid] = edge.length
+            if edge.bidirectional:
+                self.matrix[edge.end.unid, edge.start.unid] = edge.length
 
-    def dijkstra(self, start, goal, dep_0=None, dep_1=None):
+    def dijkstra(self, start, goal, dep_0, dep_1):
         """
          Dijkstra algorithm for pathfinding on a graph. returns a list of node indices along which to travel for
          shortest path
         """
         matrix = np.zeros((len(self.nodes) + 2, len(self.nodes) + 2))
-        for edge in self.edges:
-            matrix[edge.start.unid, edge.end.unid] = edge.length
-            if edge.bidirectional:
-                matrix[edge.end.unid, edge.start.unid] = edge.length
+        matrix[:-2, :-2] = self.matrix
 
         if isinstance(start, int):
             start_id = start
@@ -99,9 +102,8 @@ class PathNode(object):
         self.pos = pos
         self.unid = unid # unique node id
 
-        self.connected_to = []
-        self.incoming_edges = []
-        self.outgoing_edges = []
+        self.incoming_edges = {}
+        self.outgoing_edges = {}
 
     def scale(self, old, new):
         self.pos = self.pos / old * new
@@ -109,7 +111,7 @@ class PathNode(object):
 
 class PathEdge:
 
-    def __init__(self, start, end, bidirectional=True):
+    def __init__(self, start, end, bidirectional):
         self.start = start
         self.end = end
         self.bidirectional = bidirectional
@@ -118,10 +120,11 @@ class PathEdge:
         self.length = np.linalg.norm(self.vec)
         self.direction = self.vec / self.length
 
-        if end.unid not in start.connected_to:
-            start.connected_to.append(end.unid)
-        self.start.outgoing_edges.append(self)
-        self.end.incoming_edges.append(self)
+        self.start.outgoing_edges[end.unid] = self
+        self.end.incoming_edges[start.unid] = self
+        if self.bidirectional:
+            self.end.outgoing_edges[start.unid] = self
+            self.start.incoming_edges[end.unid] = self
 
     def scale(self):
         self.vec = self.end.pos - self.start.pos
