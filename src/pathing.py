@@ -1,10 +1,13 @@
 import numpy as np
 import heapq
 
+from src.TracedResource import TracedResource
+
 
 class PathGrid:
 
-    def __init__(self):
+    def __init__(self, env):
+        self.env = env
         self.nodes = []
         self.edges = []
         self.sorted_edges = dict()
@@ -13,8 +16,8 @@ class PathGrid:
     def add_node(self, pos):
         self.nodes.append(PathNode(pos, len(self.nodes)))
 
-    def add_edge(self, nodeid_0, nodeid_1, bidirectional=True, departments=None):
-        self.edges.append(PathEdge(self.nodes[nodeid_0], self.nodes[nodeid_1], bidirectional))
+    def add_edge(self, nodeid_0, nodeid_1, bidirectional=True, departments=None, narrow=False):
+        self.edges.append(PathEdge(self.env, self.nodes[nodeid_0], self.nodes[nodeid_1], bidirectional, narrow))
         if departments is not None:
             for dep in departments:
                 if dep not in self.sorted_edges:
@@ -111,10 +114,15 @@ class PathNode(object):
 
 class PathEdge:
 
-    def __init__(self, start, end, bidirectional):
+    def __init__(self, env, start, end, bidirectional, narrow):
+        self.env = env
         self.start = start
         self.end = end
         self.bidirectional = bidirectional
+        if narrow:
+            self.blockage = TracedResource(env, 1, f"{start.unid}-{end.unid}")
+        else:
+            self.blockage = None
 
         self.vec = self.end.pos - self.start.pos
         self.length = np.linalg.norm(self.vec)
@@ -130,6 +138,7 @@ class PathEdge:
         self.vec = self.end.pos - self.start.pos
         self.length = np.linalg.norm(self.vec)
         self.direction = self.vec / self.length
+
 
 class DijkstraNode:
 
