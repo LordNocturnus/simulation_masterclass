@@ -20,7 +20,7 @@
       "BCDEAFG": 1.0
     },
     "stochastics" : {
-      "search_bounds": [20, 30],
+      "search_bounds": [2, 3],
       "payment_bounds" : [40, 60],
       "scan_vars" : [1.1, 0.11],
       "bread_vars" : [120000, 12],

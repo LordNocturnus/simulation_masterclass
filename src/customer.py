@@ -1,5 +1,6 @@
 from scipy.stats import truncnorm
 from operator import itemgetter
+from copy import deepcopy
 import numpy.random as npr
 import numpy as np
 import simpy
@@ -23,7 +24,7 @@ class Customer:
         self.ucid = ucid # unique customer id
         self.rng = npr.default_rng(seed)
         self.stochastics = stochastics
-        self.flags = flags
+        self.flags = deepcopy(flags)
         self.walking_speed = walking_speed # walking speed in m/s
         # initialize wait times and use times of resources
         self.wait_times = {}
@@ -46,6 +47,9 @@ class Customer:
         self.color = (0, 0, 255)
 
         self.action = self.env.process(self.run())
+
+        if self.ucid == 346:
+            self.flags["print"] = True
 
     @property
     def pos(self):
@@ -89,7 +93,8 @@ class Customer:
                 path = self.store.path_grid.dijkstra(self.on_node, destination, self.current_department_id, dep)
 
             if path is None:
-                print(self.ucid)
+                print(self.ucid) # debug feature, should only trigger if dijkstra failed to find a path
+
             if not isinstance(destination, int):
                 path = path[:-1]
 
@@ -99,8 +104,10 @@ class Customer:
                     edge = node.incoming_edges[self.on_node]
                     if edge.blockage is not None:
                         # customer with a cart requests to use the edge to move to their destination
-                        req = edge.blockage.request()
+                        req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
+                        if self.ucid == 346:
+                            print("debug")
                         self.color = (255, 0, 0)
                         yield req
                         self.color = (0, 0, 255)
@@ -124,10 +131,13 @@ class Customer:
                 # move to an item location which is not on a static node
                 if not self.basket:
                     edge = self.store.path_grid.get_closest_edge(destination, dep)
-                    if edge.blockage is not None:
+                    if self.reserved_edge is None and edge.blockage is not None:
                         # customer will hold an edge even when collecting an item hence no release here
-                        req = edge.blockage.request()
+                        req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
+
+                        if self.ucid == 346 and edge.blockage.name == "59-67":
+                            print(edge.blockage.name)
                         self.color = (255, 0, 0)
                         yield req
                         self.color = (0, 0, 255)
@@ -148,6 +158,10 @@ class Customer:
             self._pos = self.pos
             self.walking = False
             self.on_node = None
+            if self.reserved_edge is not None:
+                # request is released aswell
+                self.reserved_edge[0].blockage.release(self.reserved_edge[1])
+                self.reserved_edge = None
 
     def queue(self, resource):
         self.request = resource.request(self)
@@ -178,12 +192,14 @@ class Customer:
                                 # signal next customer in line that pathing can be updated
                                 next_customer.queue_process.interrupt()
                             break
-                        if pathing.triggered and resource.customer_queue.index(self) + 1 < len(resource.customer_queue):
+                        if resource.customer_queue.index(self) + 1 < len(resource.customer_queue):
                             next_customer = resource.customer_queue[resource.customer_queue.index(self) + 1]
                                 # signal customer behind self in line that pathing should be updated
                             next_customer.queue_process.interrupt()
+                        yield self.request
                     except simpy.Interrupt:
-                        pathing.interrupt()
+                        if pathing.is_alive:
+                            pathing.interrupt()
                 else:
                     try:
                         yield self.request
@@ -242,6 +258,7 @@ class Customer:
                     department_use = self.env.now
                     yield self.env.timeout(current_department.rv.rvs(random_state=self.rng.integers(0, 2**32 - 1)))
                     current_department.queue.release(self.request)
+                    self.request = None
                 else:
                     # departments with no queue
                     self.wait_times[department_id] = self.env.now - department_wait
@@ -249,7 +266,7 @@ class Customer:
                     for i in range(self.shopping_list[department_id]):
                         item_pos = current_department.get_item_location(self.rng)
 
-                        if self.flags["print"]:
+                        if self.flags["print"] and department_id == "G":
                             print('{:.2f}: {} walking from ({:.2f},{:.2f}) to ({:.2f},{:.2f})'.format(
                                 self.env.now, self.ucid, self.pos[0], self.pos[1], item_pos[0], item_pos[1]))
                         walking = self.env.process(self.path_to(item_pos, department_id))
@@ -319,6 +336,7 @@ class Customer:
 
             self.use_times["checkout"] = self.env.now - checkout_use
             checkout.release(self.request)
+            self.request = None
             self.color = (0, 0, 255)
             yield self.env.process(self.path_to(self.store.path_grid.nodes[75].unid)) # walk to exit
 

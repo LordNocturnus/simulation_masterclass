@@ -44,21 +44,34 @@ class PathGrid:
         matrix = np.zeros((len(self.nodes) + 2, len(self.nodes) + 2))
         matrix[:-2, :-2] = self.matrix
 
-        if isinstance(start, int):
-            start_id = start
-        else:
+        if not isinstance(start, int) and not isinstance(goal, int):
+            start_edge = self.get_closest_edge(start, dep_0)
+            goal_edge = self.get_closest_edge(goal, dep_1)
+            if start_edge == goal_edge:
+                return [None]
+
+            matrix[-2, start_edge.end.unid] = np.linalg.norm(start_edge.end.pos - start)
+            matrix[-2, start_edge.start.unid] = np.linalg.norm(start_edge.start.pos - start)
+            start_id = len(matrix) - 2
+
+            matrix[goal_edge.start.unid, -1] = np.linalg.norm(goal_edge.start.pos - goal)
+            matrix[goal_edge.end.unid, -1] = np.linalg.norm(goal_edge.end.pos - goal)
+            goal_id = len(matrix) - 1
+        elif not isinstance(start, int):
             edge = self.get_closest_edge(start, dep_0)
             matrix[-2, edge.end.unid] = np.linalg.norm(edge.end.pos - start)
             matrix[-2, edge.start.unid] = np.linalg.norm(edge.start.pos - start)
             start_id = len(matrix) - 2
-
-        if isinstance(goal, int):
             goal_id = goal
-        else:
+        elif not isinstance(goal, int):
             edge = self.get_closest_edge(goal, dep_1)
             matrix[edge.start.unid, -1] = np.linalg.norm(edge.start.pos - goal)
             matrix[edge.end.unid, -1] = np.linalg.norm(edge.end.pos - goal)
             goal_id = len(matrix) - 1
+            start_id = start
+        else:
+            start_id = start
+            goal_id = goal
 
         nodes = []
         for node in range(len(matrix)):
@@ -70,7 +83,7 @@ class PathGrid:
         while len(open_list) > 0:
             current_node = heapq.heappop(open_list)
             if current_node.unid == goal_id:
-                return current_node.path()
+                return current_node.path()#[:-1]
             for node_id, dist in enumerate(matrix[current_node.unid]):
                 if dist == 0.0:
                     continue

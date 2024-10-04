@@ -45,7 +45,7 @@ class Visualization:
 
             self.gameDisplay.blit(self.surface, self.surface.get_rect())
             pg.display.update()
-            yield env.timeout(10)
+            yield env.timeout(60)
             self.clock.tick(60)
             #print(self.clock.get_fps())
         pg.quit()
@@ -62,17 +62,17 @@ class Visualization:
             pg.draw.line(self.surface, self.green, self.scale_point(edge.start.pos), self.scale_point(edge.end.pos))
 
     def draw_customers(self, env):
-        customer_in_store = False
+        customer_in_store = []
         for c in self.customer_factory.customers:
             if c.draw: # and c.ucid == 14:
-                customer_in_store = True
+                customer_in_store.append(c.ucid)
                 if c.basket:
                     pg.draw.circle(self.surface, c.color, self.scale_point(c.pos), self.customer_size)
                 else:
                     pg.draw.rect(self.surface, c.color, (self.scale_point(c.pos)[0] - self.customer_size,
                                                            self.scale_point(c.pos)[1] - self.customer_size,
                                                            2 * self.customer_size, 2 * self.customer_size))
-        if env.now >= 12.25 * 3600 and not customer_in_store:
+        if env.now >= 12.25 * 3600 and len(customer_in_store) == 0:
             # no more customers in the store terminate
             # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization
             self.ended = True
