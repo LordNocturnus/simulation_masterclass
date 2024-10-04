@@ -26,11 +26,11 @@ class TracedResource(Resource):
             self.customer_queue.append(customer)
         return super().request()
 
-    def release(self, request):
+    def release(self, request, customer=None):
         self.log_event.append(-1)
         self.log_time.append(self.env.now)
-        if len(self.customer_queue) > 0:
-            self.customer_queue.pop(0)
+        if customer is not None:
+            self.customer_queue.remove(customer)
         return super().release(request)
 
     def availability(self):

@@ -106,8 +106,6 @@ class Customer:
                         # customer with a cart requests to use the edge to move to their destination
                         req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
-                        if self.ucid == 346:
-                            print("debug")
                         self.color = (255, 0, 0)
                         yield req
                         self.color = (0, 0, 255)
@@ -123,7 +121,9 @@ class Customer:
 
                 if self.reserved_edge is not None:
                     # request is released once customer hase left the edge
-                    self.reserved_edge[0].blockage.release(self.reserved_edge[1])
+                    self.reserved_edge[0].blockage.release(self.reserved_edge[1], self)
+                    if self.ucid == 424:
+                        print("debug")
                     self.reserved_edge = None
                 self.on_node = node_id
 
@@ -135,9 +135,6 @@ class Customer:
                         # customer will hold an edge even when collecting an item hence no release here
                         req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
-
-                        if self.ucid == 346 and edge.blockage.name == "59-67":
-                            print(edge.blockage.name)
                         self.color = (255, 0, 0)
                         yield req
                         self.color = (0, 0, 255)
@@ -160,7 +157,9 @@ class Customer:
             self.on_node = None
             if self.reserved_edge is not None:
                 # request is released aswell
-                self.reserved_edge[0].blockage.release(self.reserved_edge[1])
+                self.reserved_edge[0].blockage.release(self.reserved_edge[1], self)
+                if self.ucid == 424:
+                    print("debug")
                 self.reserved_edge = None
 
     def queue(self, resource):
@@ -184,7 +183,10 @@ class Customer:
                     try:
                         yield self.request | pathing
                         if self.request.triggered:
-                            yield self.env.process(self.path_to(resource.node.unid))
+                            #interrupt current pathing and start a new one with the updated destination
+                            pathing.interrupt()
+                            pathing = self.env.process(self.path_to(resource.node.unid))
+                            yield pathing
                             if len(resource.customer_queue) > resource.capacity and \
                                     self == resource.customer_queue[resource.capacity - 1]:
                                 # customer is "last currently served customer"
@@ -257,7 +259,7 @@ class Customer:
                     self.wait_times[department_id] = self.env.now - department_wait
                     department_use = self.env.now
                     yield self.env.timeout(current_department.rv.rvs(random_state=self.rng.integers(0, 2**32 - 1)))
-                    current_department.queue.release(self.request)
+                    current_department.queue.release(self.request, self)
                     self.request = None
                 else:
                     # departments with no queue
@@ -335,7 +337,7 @@ class Customer:
                 yield self.env.timeout(self.rng.uniform(30, 45))
 
             self.use_times["checkout"] = self.env.now - checkout_use
-            checkout.release(self.request)
+            checkout.release(self.request, self)
             self.request = None
             self.color = (0, 0, 255)
             yield self.env.process(self.path_to(self.store.path_grid.nodes[75].unid)) # walk to exit

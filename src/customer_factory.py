@@ -78,7 +78,7 @@ class CustomerFactory:
         if key == "baskets":
             return np.asarray([c.wait_times["container"] for c in self.customers if c.basket])
         elif key == "shopping_carts":
-            return np.asarray([c.wait_times["container"] for c in self.customers if not c.basket])
+            return np.asarray([c.wait_times["container"] for c in self.customers if not c.basket and "container" in c.wait_times.keys()])
         return np.asarray([c.wait_times[key] for c in self.customers])
 
     def use_times(self, key):
