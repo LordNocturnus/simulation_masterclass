@@ -79,21 +79,21 @@ class CustomerFactory:
             return np.asarray([c.wait_times["container"] for c in self.customers if c.basket])
         elif key == "shopping_carts":
             return np.asarray([c.wait_times["container"] for c in self.customers if not c.basket and "container" in c.wait_times.keys()])
-        return np.asarray([c.wait_times[key] for c in self.customers])
+        return np.asarray([c.wait_times[key] for c in self.customers if "container" in c.wait_times.keys()])
 
     def use_times(self, key):
         if key == "baskets":
             return np.asarray([c.use_times["container"] for c in self.customers if c.basket])
         elif key == "shopping_carts":
-            return np.asarray([c.use_times["container"] for c in self.customers if not c.basket])
-        return np.asarray([c.use_times[key] for c in self.customers])
+            return np.asarray([c.use_times["container"] for c in self.customers if not c.basket and "container" in c.use_times.keys()])
+        return np.asarray([c.use_times[key] for c in self.customers if key in c.use_times.keys()])
 
     def total_times(self, key):
         if key == "baskets":
             return np.asarray([c.total_time("container") for c in self.customers if c.basket])
         elif key == "shopping_carts":
-            return np.asarray([c.total_time("container") for c in self.customers if not c.basket])
-        return np.asarray([c.total_time(key) for c in self.customers])
+            return np.asarray([c.total_time("container") for c in self.customers if not c.basket and "container" in c.use_times.keys() and "container" in c.wait_times.keys()])
+        return np.asarray([c.total_time(key) for c in self.customers if key in c.use_times.keys() and key in c.wait_times.keys()])
 
     @property
     def store_times(self):

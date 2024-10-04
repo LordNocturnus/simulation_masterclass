@@ -45,7 +45,7 @@ class Visualization:
 
             self.gameDisplay.blit(self.surface, self.surface.get_rect())
             pg.display.update()
-            yield env.timeout(60)
+            yield env.timeout(1)
             self.clock.tick(60)
             #print(self.clock.get_fps())
         pg.quit()
@@ -72,6 +72,7 @@ class Visualization:
                     pg.draw.rect(self.surface, c.color, (self.scale_point(c.pos)[0] - self.customer_size,
                                                            self.scale_point(c.pos)[1] - self.customer_size,
                                                            2 * self.customer_size, 2 * self.customer_size))
+        #print(customer_in_store)
         if env.now >= 12.25 * 3600 and len(customer_in_store) == 0:
             # no more customers in the store terminate
             # checking after 12.25h instead of 12h to prevent customer entering at exactly 20:00 breaking the visualization
