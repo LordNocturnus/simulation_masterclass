@@ -31,6 +31,8 @@ class TracedResource(Resource):
         self.log_time.append(self.env.now)
         if customer is not None:
             self.customer_queue.remove(customer)
+        if request not in self.users:
+            self.queue.remove(request)
         return super().release(request)
 
     def availability(self):

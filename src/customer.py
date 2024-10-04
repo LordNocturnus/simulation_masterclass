@@ -40,8 +40,6 @@ class Customer:
         self.current_department_id = None
         self.reserved_edge = None # tuple of the reserved edge for carts and the simpy request object or None
 
-        self.pathing = False
-
         self.request = None # memory for requests created by
         self.queue_process = None
 
@@ -49,9 +47,6 @@ class Customer:
         self.color = (0, 0, 255)
 
         self.action = self.env.process(self.run())
-
-        #if self.ucid == 424:
-        #    self.flags["print"] = True
 
     @property
     def pos(self):
@@ -88,9 +83,6 @@ class Customer:
         path to the given destination.
         destination can be a position or index of a node in the path grid
         """
-        if self.pathing:
-            print("debug")
-        self.pathing = True
         try:
             if self.on_node is None:
                 path = self.store.path_grid.dijkstra(self.pos, destination, self.current_department_id, dep)
@@ -109,14 +101,10 @@ class Customer:
                     edge = node.incoming_edges[self.on_node]
                     if edge.blockage is not None:
                         # customer with a cart requests to use the edge to move to their destination
-                        if self.ucid == 424 and edge.blockage.name == "53-62":
-                            print(edge.name)
                         req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
                         self.color = (255, 0, 0)
                         yield req
-                        if self.ucid == 424 and edge.blockage.name == "53-62":
-                            print(edge.blockage.name)
                         self.color = (0, 0, 255)
                 # customer walking to the next node
                 self.walking_start_time = self.env.now
@@ -131,8 +119,6 @@ class Customer:
                 if self.reserved_edge is not None:
                     # request is released once customer hase left the edge
                     self.reserved_edge[0].blockage.release(self.reserved_edge[1], self)
-                    #if self.ucid == 424:
-                    #    print("debug")
                     self.reserved_edge = None
                 self.on_node = node_id
 
@@ -142,14 +128,10 @@ class Customer:
                     edge = self.store.path_grid.get_closest_edge(destination, dep)
                     if self.reserved_edge is None and edge.blockage is not None:
                         # customer will hold an edge even when collecting an item hence no release here
-                        if self.ucid == 424 and edge.blockage.name == "53-62":
-                            print(edge.blockage.name)
                         req = edge.blockage.request(self)
                         self.reserved_edge = (edge, req)
                         self.color = (255, 0, 0)
                         yield req
-                        if self.ucid == 424 and edge.blockage.name == "53-62":
-                            print(edge.blockage.name)
                         self.color = (0, 0, 255)
 
                 # customer walking to the final destination
@@ -170,11 +152,8 @@ class Customer:
             self.on_node = None
             if self.reserved_edge is not None:
                 # request is released aswell
-                #if self.ucid == 424:
-                #    print("debug")
                 self.reserved_edge[0].blockage.release(self.reserved_edge[1], self)
                 self.reserved_edge = None
-        self.pathing = False
 
     def queue(self, resource):
         self.request = resource.request(self)
